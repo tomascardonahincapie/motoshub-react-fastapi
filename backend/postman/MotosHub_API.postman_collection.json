@@ -1,0 +1,775 @@
+{
+  "info": {
+    "name": "MotosHub API - Cuarto Avance (FastAPI)",
+    "description": "Coleccion de pruebas de la API del cuarto avance (React + Vite + FastAPI + MySQL).\n\nOrden sugerido:\n1. Ejecutar 'Login administrador' (guarda el token automaticamente en la variable token_admin).\n2. Ejecutar 'Login empleado' y 'Login cliente' para probar el control de roles.\n3. Recorrer el resto de carpetas.\n\nFicha 3406211 - Instructor: Jhan Hader Munoz",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "token_admin", "value": "", "type": "string" },
+    { "key": "token_empleado", "value": "", "type": "string" },
+    { "key": "token_cliente", "value": "", "type": "string" },
+    { "key": "id_usuario", "value": "", "type": "string" },
+    { "key": "id_producto", "value": "", "type": "string" },
+    { "key": "id_servicio", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01 - Sistema",
+      "item": [
+        {
+          "name": "Informacion del servicio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/", "host": ["{{base_url}}"], "path": [""] }
+          }
+        },
+        {
+          "name": "Estado y conexion a la base de datos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/salud", "host": ["{{base_url}}"], "path": ["salud"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Registro e inicio de sesion",
+      "item": [
+        {
+          "name": "Registro de cliente (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const datos = pm.response.json();",
+                  "pm.test('Devuelve el usuario creado', () => pm.expect(datos.usuario).to.have.property('id_usuario'));",
+                  "pm.collectionVariables.set('id_usuario', datos.usuario.id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Tomas\",\n  \"apellidos\": \"Cardona\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1035123456\",\n  \"direccion\": \"Calle 10 #45-20\",\n  \"telefono\": \"3001234567\",\n  \"email\": \"tomas@correo.com\",\n  \"password\": \"Clave123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/registro",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "registro"]
+            },
+            "description": "Registra un cliente. El Backend valida los datos, comprueba que el correo y el documento no esten duplicados y guarda la contrasena como hash bcrypt."
+          }
+        },
+        {
+          "name": "Registro duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 409 Conflict', () => pm.response.to.have.status(409));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Tomas\",\n  \"apellidos\": \"Cardona\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1035123456\",\n  \"direccion\": \"Calle 10 #45-20\",\n  \"telefono\": \"3001234567\",\n  \"email\": \"tomas@correo.com\",\n  \"password\": \"Clave123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/registro",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "registro"]
+            }
+          }
+        },
+        {
+          "name": "Registro con datos invalidos (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 422', () => pm.response.to.have.status(422));",
+                  "pm.test('Indica los campos con error', () => pm.expect(pm.response.json()).to.have.property('errors'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Tomas123\",\n  \"apellidos\": \"Cardona\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"12\",\n  \"direccion\": \"Calle 10 #45-20\",\n  \"telefono\": \"abc\",\n  \"email\": \"correo-malo\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/registro",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "registro"]
+            },
+            "description": "Demuestra que el Backend valida de nuevo, aunque React ya haya validado."
+          }
+        },
+        {
+          "name": "Login administrador (genera JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "const datos = pm.response.json();",
+                  "pm.test('Devuelve un token JWT', () => pm.expect(datos.token).to.be.a('string'));",
+                  "pm.test('No expone la contrasena', () => pm.expect(datos.usuario).to.not.have.property('password'));",
+                  "pm.collectionVariables.set('token_admin', datos.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@jhmtech.com\",\n  \"password\": \"Admin1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login empleado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_empleado', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"empleado@jhmtech.com\",\n  \"password\": \"Empleado123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_cliente', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@jhmtech.com\",\n  \"password\": \"Cliente123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login con credenciales invalidas (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@jhmtech.com\",\n  \"password\": \"ClaveIncorrecta1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Proteccion de endpoints y control de roles",
+      "item": [
+        {
+          "name": "Usuarios SIN token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Codigo no_autenticado', () => pm.expect(pm.response.json().codigo).to.eql('no_autenticado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Usuarios con token manipulado (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Codigo token_invalido', () => pm.expect(pm.response.json().codigo).to.eql('token_invalido'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer token.falso.123" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Usuarios con token de CLIENTE (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Codigo sin_permisos', () => pm.expect(pm.response.json().codigo).to.eql('sin_permisos'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            },
+            "description": "El control definitivo lo hace el Backend: aunque el Frontend oculte el panel, la API tambien lo impide."
+          }
+        },
+        {
+          "name": "Usuarios con token de EMPLEADO (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 403', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_empleado}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - CRUD de usuarios (administrador)",
+      "item": [
+        {
+          "name": "Listar usuarios (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Ninguna contrasena expuesta', () => {",
+                  "  pm.response.json().usuarios.forEach(u => pm.expect(u).to.not.have.property('password'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Consultar un usuario (GET)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{id_usuario}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "{{id_usuario}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear empleado (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 201', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Martinez\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1088776655\",\n  \"direccion\": \"Avenida 30 #15-40\",\n  \"telefono\": \"3112223344\",\n  \"email\": \"ana.martinez@jhmtech.com\",\n  \"password\": \"Empleada123\",\n  \"rol_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar usuario (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Tomas Andres\",\n  \"apellidos\": \"Cardona Hincapie\",\n  \"direccion\": \"Carrera 80 #20-15\",\n  \"telefono\": \"3009998877\",\n  \"email\": \"tomas@correo.com\",\n  \"rol_id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{id_usuario}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "{{id_usuario}}"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado a inactivo (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"inactivo\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{id_usuario}}/estado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "{{id_usuario}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Reactivar usuario (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"activo\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{id_usuario}}/estado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "{{id_usuario}}", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar usuario (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{id_usuario}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "{{id_usuario}}"]
+            }
+          }
+        },
+        {
+          "name": "Usuario inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 404', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/9999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "9999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - CRUD de productos",
+      "item": [
+        {
+          "name": "Listar productos (GET, publico)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200 sin token', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/productos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos"]
+            }
+          }
+        },
+        {
+          "name": "Crear producto sin token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 401', () => pm.response.to.have.status(401));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto sin permiso\",\n  \"precio\": 10000\n}" },
+            "url": {
+              "raw": "{{base_url}}/api/productos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos"]
+            }
+          }
+        },
+        {
+          "name": "Crear producto como empleado (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('id_producto', pm.response.json().id_producto);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Guantes Racing Pro\",\n  \"descripcion\": \"Guantes de cuero reforzado con proteccion en nudillos.\",\n  \"precio\": 145000,\n  \"stock\": 12,\n  \"categoria\": \"Accesorios\",\n  \"imagen\": \"https://ejemplo.com/guantes.webp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/productos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos"]
+            }
+          }
+        },
+        {
+          "name": "Consultar producto (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/productos/{{id_producto}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos", "{{id_producto}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar producto (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Guantes Racing Pro 2026\",\n  \"descripcion\": \"Guantes de cuero reforzado con proteccion en nudillos.\",\n  \"precio\": 159000,\n  \"stock\": 10,\n  \"categoria\": \"Accesorios\",\n  \"imagen\": \"https://ejemplo.com/guantes.webp\",\n  \"estado\": \"activo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/productos/{{id_producto}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos", "{{id_producto}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar producto como empleado (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 403', () => pm.response.to.have.status(403));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_empleado}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/productos/{{id_producto}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos", "{{id_producto}}"]
+            },
+            "description": "Solo el Administrador puede eliminar productos."
+          }
+        },
+        {
+          "name": "Eliminar producto como administrador (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/productos/{{id_producto}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "productos", "{{id_producto}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - CRUD de servicios",
+      "item": [
+        {
+          "name": "Listar servicios (GET, publico)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/servicios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "servicios"]
+            }
+          }
+        },
+        {
+          "name": "Crear servicio como empleado (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('id_servicio', pm.response.json().id_servicio);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sincronizacion de inyeccion\",\n  \"descripcion\": \"Ajuste electronico del sistema de inyeccion.\",\n  \"precio\": 120000,\n  \"duracion_minutos\": 60\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/servicios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "servicios"]
+            }
+          }
+        },
+        {
+          "name": "Consultar servicio (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/servicios/{{id_servicio}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "servicios", "{{id_servicio}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar servicio (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sincronizacion de inyeccion premium\",\n  \"descripcion\": \"Ajuste electronico del sistema de inyeccion.\",\n  \"precio\": 145000,\n  \"duracion_minutos\": 75,\n  \"estado\": \"activo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/servicios/{{id_servicio}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "servicios", "{{id_servicio}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar servicio como administrador (DELETE)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/servicios/{{id_servicio}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "servicios", "{{id_servicio}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
