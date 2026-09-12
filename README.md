@@ -58,12 +58,13 @@ usuarios de prueba.
 >
 > ```bash
 > mysql -u root -p < backend/database/actualizar_imagenes.sql
+> mysql -u root -p < backend/database/recuperacion_password.sql
 > mysql -u root -p < backend/database/usuarios_demo.sql
 > ```
 >
 > El primero agrega la columna `imagen` a la tabla `servicios` y apunta las
-> fotos de productos y servicios a los archivos locales. El segundo agrega los
-> usuarios Empleado y Cliente. Ninguno borra productos ni servicios.
+> fotos a los archivos locales; el segundo crea la tabla `tokens_recuperacion`;
+> el tercero agrega los usuarios Empleado y Cliente. Ninguno borra registros.
 > Los usuarios creados con el Backend de Node.js siguen funcionando, porque el
 > formato del hash bcrypt es el mismo.
 
@@ -114,6 +115,9 @@ inicio de sesión: se registra siempre con el rol Cliente.
 | POST   | `/api/usuarios/registro`          | Público                        |
 | POST   | `/api/auth/register`              | Público (misma operación)      |
 | POST   | `/api/auth/login`                 | Público                        |
+| POST   | `/api/auth/recuperar-password`    | Público                        |
+| GET    | `/api/auth/restablecer-password/{token}` | Público                 |
+| POST   | `/api/auth/restablecer-password`  | Público                        |
 | GET    | `/api/usuarios`                   | Administrador                  |
 | GET    | `/api/usuarios/{id}`              | Administrador o el propio usuario |
 | POST   | `/api/usuarios`                   | Administrador                  |
@@ -202,6 +206,8 @@ página y en la página de contacto.
   correo y documento duplicados, genera el hash y guarda en la base de datos.
 - **Inicio de sesión con JWT**: verifica el hash de la contraseña y devuelve un
   token con el identificador, el correo y el rol del usuario.
+- **Recuperación de contraseña** con enlace de un solo uso y vigencia de 30
+  minutos. En la base de datos se guarda solo el hash SHA-256 del token.
 - **Protección de endpoints** con dependencias de FastAPI que comprueban
   existencia del token, firma, expiración, usuario asociado y rol.
 - **Control de roles** (Administrador, Empleado, Cliente) validado en el
@@ -215,11 +221,11 @@ página y en la página de contacto.
 - **Botón flotante de WhatsApp** conservado, independiente del Backend.
 - **Documentación automática Swagger** en `/docs`.
 - **Colección de Postman** con 33 peticiones listas para ejecutar.
-- **40 pruebas automáticas** que recorren toda la API (`pytest`).
+- **54 pruebas automáticas** que recorren toda la API (`pytest`).
 
 ## Verificación realizada
 
-- `pytest` → 40 pruebas en verde (registro, login, JWT, roles, CRUD,
+- `pytest` → 54 pruebas en verde (registro, login, JWT, roles, CRUD,
   validaciones y respuestas de error).
 - Recorrido completo de la API contra **MySQL real** con
   `python scripts/verificar_api.py`.

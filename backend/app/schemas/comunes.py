@@ -29,13 +29,13 @@ def validar_password(valor: str) -> str:
     regulares de Pydantic v2 no soporta anticipaciones del tipo (?=.*[A-Z]).
     """
     if not 8 <= len(valor) <= 20:
-        raise ValueError('La contrasena debe tener entre 8 y 20 caracteres')
+        raise ValueError('La contraseña debe tener entre 8 y 20 caracteres')
     if not re.search(r'[a-z]', valor):
-        raise ValueError('La contrasena debe incluir al menos una letra minuscula')
+        raise ValueError('La contraseña debe incluir al menos una letra minúscula')
     if not re.search(r'[A-Z]', valor):
-        raise ValueError('La contrasena debe incluir al menos una letra mayuscula')
+        raise ValueError('La contraseña debe incluir al menos una letra mayúscula')
     if not re.search(r'[0-9]', valor):
-        raise ValueError('La contrasena debe incluir al menos un numero')
+        raise ValueError('La contraseña debe incluir al menos un número')
     return valor
 
 

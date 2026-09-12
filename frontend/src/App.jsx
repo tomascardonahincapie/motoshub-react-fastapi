@@ -10,6 +10,7 @@ import DetalleCatalogo from './pages/DetalleCatalogo';
 import AboutUs from './pages/AboutUs';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
+import RestablecerPassword from './pages/RestablecerPassword';
 import AdminPanel from './pages/admin/AdminPanel';
 import EmployeePanel from './pages/EmployeePanel';
 import ClientPanel from './pages/ClientPanel';
@@ -32,6 +33,7 @@ function AppShell() {
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/restablecer/:token" element={<RestablecerPassword />} />
 
           <Route
             path="/admin"

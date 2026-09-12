@@ -35,8 +35,13 @@ class Configuracion(BaseSettings):
     jwt_secret: str = 'cambia_este_valor_en_tu_archivo_env'
     jwt_algoritmo: str = 'HS256'
     jwt_expira_minutos: int = 480  # 8 horas, igual que el Backend anterior
+    # Vigencia del enlace de recuperacion de contrasena
+    recuperacion_expira_minutos: int = 30
 
     # --- CORS -------------------------------------------------------------
+    # URL publica del Frontend: se usa para armar el enlace de recuperacion
+    url_frontend: str = 'http://localhost:5173'
+
     origenes_permitidos: list[str] = [
         'http://localhost:5173',
         'http://127.0.0.1:5173',

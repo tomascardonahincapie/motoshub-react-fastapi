@@ -44,6 +44,14 @@ export const api = {
   register: (payload) => request('/usuarios/registro', { method: 'POST', body: payload }),
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
 
+  // Recuperacion de contrasena
+  recuperarPassword: (email) =>
+    request('/auth/recuperar-password', { method: 'POST', body: { email } }),
+  verificarTokenRecuperacion: (token) =>
+    request(`/auth/restablecer-password/${token}`),
+  restablecerPassword: (token, password) =>
+    request('/auth/restablecer-password', { method: 'POST', body: { token, password } }),
+
   // Usuarios (requieren token)
   getUsuarios: (token) => request('/usuarios', { token }),
   getUsuario: (id, token) => request(`/usuarios/${id}`, { token }),

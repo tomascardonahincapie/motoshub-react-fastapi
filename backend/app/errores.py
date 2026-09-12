@@ -62,3 +62,13 @@ class CuentaInactiva(ErrorDeDominio):
 class CredencialesInvalidas(ErrorDeDominio):
     codigo = 'credenciales_invalidas'
     estado = status.HTTP_401_UNAUTHORIZED
+
+
+class TokenRecuperacionInvalido(ErrorDeDominio):
+    """El enlace de recuperacion no existe, ya se uso o expiro -> 400."""
+
+    codigo = 'token_recuperacion_invalido'
+    estado = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, mensaje: str = 'El enlace de recuperación no es válido o ya expiró'):
+        super().__init__(mensaje)

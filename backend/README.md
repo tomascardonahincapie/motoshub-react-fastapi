@@ -49,6 +49,7 @@ script crea:
 | `usuarios`       | Datos del formulario de registro + rol, estado y hash        |
 | `productos`      | Catálogo de la tienda (15 productos de ejemplo)              |
 | `servicios`      | Servicios del taller (8 de ejemplo, con imagen)              |
+| `tokens_recuperacion` | Enlaces de restablecimiento de contraseña (hash SHA-256) |
 
 La tabla `usuarios` conserva todos los campos del formulario: nombres,
 apellidos, tipo y número de documento, dirección, teléfono, correo, contraseña
@@ -59,6 +60,7 @@ ejecuta solo estos dos scripts:
 
 ```bash
 mysql -u root -p < database/actualizar_imagenes.sql
+mysql -u root -p < database/recuperacion_password.sql
 mysql -u root -p < database/usuarios_demo.sql
 ```
 
@@ -126,6 +128,19 @@ La dependencia `usuario_actual` comprueba existencia del token, firma,
 expiración, usuario asociado y que la cuenta siga activa. `ExigirRoles`
 restringe además por rol.
 
+**Recuperación de contraseña.** `POST /api/auth/recuperar-password` genera un
+token aleatorio de 256 bits, guarda **solo su hash SHA-256** en la tabla
+`tokens_recuperacion` y envía el enlace al usuario. El token vence a los 30
+minutos, sirve una sola vez y se anula si se solicita otro. La respuesta es
+idéntica exista o no el correo, para no revelar qué direcciones están
+registradas.
+
+> El proyecto no tiene servidor de correo configurado, así que el enlace se
+> escribe en la consola donde corre uvicorn (`app/core/notificaciones.py`) y,
+> en modo desarrollo, se devuelve también en la respuesta para poder probar el
+> flujo. Para enviarlo por correo real basta con reemplazar el cuerpo de
+> `enviar_enlace_recuperacion` por una llamada al proveedor de correo.
+
 **Variables de entorno.** Credenciales de MySQL y clave del JWT viven en
 `.env`, que está excluido en `.gitignore`.
 
@@ -154,7 +169,7 @@ dejó de ser válido) sin depender del texto del mensaje.
 
 | Código HTTP | Situación                                        |
 |-------------|--------------------------------------------------|
-| 400         | Error de negocio                                 |
+| 400         | Error de negocio o enlace de recuperación no válido |
 | 401         | Falta el token o las credenciales son inválidas  |
 | 403         | Token inválido, cuenta inactiva o rol sin permiso|
 | 404         | Recurso no encontrado                            |
@@ -169,9 +184,10 @@ dejó de ser válido) sin depender del texto del mensaje.
 pytest
 ```
 
-40 pruebas que cubren registro, duplicados, validaciones, login, JWT,
+54 pruebas que cubren registro, duplicados, validaciones, login, JWT,
 protección de endpoints, control de roles, el CRUD de usuarios, productos y
-servicios, y el manejo de las imágenes del catálogo. Usan SQLite en memoria, así que no necesitan que MySQL esté
+servicios, el manejo de las imágenes del catálogo y el flujo completo de
+recuperación de contraseña (`tests/test_recuperacion.py`). Usan SQLite en memoria, así que no necesitan que MySQL esté
 encendido.
 
 ### Evidencia contra MySQL

@@ -11,10 +11,7 @@ Ficha 3406211 · Instructor: Jhan Hader Muñoz
 
 ## Estado de los requerimientos
 
-**25 de 26 cumplen (96 %).** El único pendiente es el **REQ-15 (Recuperación de
-Contraseña)**: el formulario existe en el Frontend y valida el correo, pero
-todavía no hay endpoint en FastAPI que genere el token de restablecimiento ni
-envío del correo.
+**26 de 26 cumplen (100 %).**
 
 ## Índice de capturas
 
@@ -34,7 +31,7 @@ envío del correo.
 | `req12_roles.png` | Control de roles: 401 / 403 / 200 según el rol |
 | `req13_hooks.png` | Uso de Hooks de React |
 | `req14_endpoints.png` | Endpoints de la API |
-| `req15_recuperacion.png` | Recuperación de contraseña (solo Frontend) |
+| `req15_recuperacion.png` | Recuperación de contraseña: flujo completo |
 | `req16_crud_usuarios.png` | CRUD completo de usuarios |
 | `req17_panel_admin.png` | Panel de administración |
 | `req18_panel_empleado.png` | Panel de empleado |

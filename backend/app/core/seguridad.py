@@ -4,6 +4,8 @@ Las contrasenas jamas se guardan en texto plano: se almacena unicamente el
 hash bcrypt. Los tokens JWT se firman con la clave secreta definida en .env.
 """
 
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -48,3 +50,25 @@ def decodificar_token(token: str) -> dict | None:
         return jwt.decode(token, configuracion.jwt_secret, algorithms=[configuracion.jwt_algoritmo])
     except JWTError:
         return None
+
+
+# ---------------------------------------------------------------------------
+# Recuperacion de contrasena
+# ---------------------------------------------------------------------------
+def generar_token_recuperacion() -> str:
+    """Genera un token aleatorio y dificil de adivinar (256 bits)."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_de_token(token: str) -> str:
+    """Huella SHA-256 del token: es lo unico que se guarda en la base de datos.
+
+    Basta un hash rapido porque el token ya es aleatorio y largo; no hace falta
+    bcrypt, que esta pensado para contrasenas escogidas por personas.
+    """
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+
+def comparar_tokens(a: str, b: str) -> bool:
+    """Comparacion en tiempo constante, para no filtrar informacion."""
+    return secrets.compare_digest(a, b)
