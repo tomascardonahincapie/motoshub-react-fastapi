@@ -42,6 +42,17 @@ class Configuracion(BaseSettings):
     # URL publica del Frontend: se usa para armar el enlace de recuperacion
     url_frontend: str = 'http://localhost:5173'
 
+    # --- Servidor de correo (SMTP) ----------------------------------------
+    # Si se dejan vacios, el enlace de recuperacion se escribe en la consola
+    # en lugar de enviarse por correo.
+    smtp_host: str = ''
+    smtp_puerto: int = 587
+    smtp_usuario: str = ''
+    smtp_password: str = ''
+    smtp_remitente: str = ''
+    smtp_tls: bool = True   # STARTTLS, para el puerto 587
+    smtp_ssl: bool = False  # SSL directo, para el puerto 465
+
     origenes_permitidos: list[str] = [
         'http://localhost:5173',
         'http://127.0.0.1:5173',

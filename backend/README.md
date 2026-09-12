@@ -135,11 +135,28 @@ minutos, sirve una sola vez y se anula si se solicita otro. La respuesta es
 idéntica exista o no el correo, para no revelar qué direcciones están
 registradas.
 
-> El proyecto no tiene servidor de correo configurado, así que el enlace se
-> escribe en la consola donde corre uvicorn (`app/core/notificaciones.py`) y,
-> en modo desarrollo, se devuelve también en la respuesta para poder probar el
-> flujo. Para enviarlo por correo real basta con reemplazar el cuerpo de
-> `enviar_enlace_recuperacion` por una llamada al proveedor de correo.
+**Envío del correo.** Si en el `.env` están `SMTP_HOST`, `SMTP_USUARIO` y
+`SMTP_PASSWORD`, el enlace se envía por correo con un mensaje en HTML. Si están
+vacíos, se escribe en la consola donde corre uvicorn, para poder trabajar sin
+montar nada. Un fallo de envío nunca rompe la petición: se registra el error y
+el enlace queda igualmente en el log.
+
+Para usar Gmail:
+
+1. Activa la verificación en dos pasos en tu cuenta de Google.
+2. Crea una contraseña de aplicación en https://myaccount.google.com/apppasswords
+3. En `backend/.env`, completa `SMTP_USUARIO` con tu correo y `SMTP_PASSWORD`
+   con esa contraseña de 16 caracteres (sin espacios).
+
+> Debe ser una **contraseña de aplicación**: Google rechaza la contraseña normal
+> de la cuenta desde aplicaciones externas.
+
+Para comprobar el envío sin credenciales reales hay un servidor SMTP de prueba:
+
+```bash
+pip install aiosmtpd
+python scripts/probar_correo.py
+```
 
 **Variables de entorno.** Credenciales de MySQL y clave del JWT viven en
 `.env`, que está excluido en `.gitignore`.
