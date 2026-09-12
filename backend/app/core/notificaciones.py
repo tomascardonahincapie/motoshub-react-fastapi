@@ -13,6 +13,7 @@ import logging
 import smtplib
 import ssl
 from email.message import EmailMessage
+from email.utils import formataddr, parseaddr
 
 from app.core.configuracion import configuracion
 
@@ -103,12 +104,31 @@ def _cuerpo_html(nombres: str, enlace: str, minutos: int) -> str:
 </body></html>"""
 
 
+def _remitente() -> str:
+    """Dirección que aparece como remitente.
+
+    Gmail solo permite enviar desde la cuenta autenticada: si el remitente
+    configurado apunta a otra dirección, se conserva el nombre visible pero se
+    usa la cuenta real, porque de lo contrario Google reescribe o rechaza el
+    mensaje.
+    """
+    configurado = (configuracion.smtp_remitente or '').strip()
+    if not configurado:
+        return configuracion.smtp_usuario
+
+    nombre, direccion = parseaddr(configurado)
+    es_gmail = 'gmail' in configuracion.smtp_host.lower()
+    if es_gmail and direccion.lower() != configuracion.smtp_usuario.lower():
+        return formataddr((nombre or 'MotosHub', configuracion.smtp_usuario))
+    return configurado
+
+
 def _armar_mensaje(email: str, nombres: str, enlace: str) -> EmailMessage:
     minutos = configuracion.recuperacion_expira_minutos
 
     mensaje = EmailMessage()
     mensaje['Subject'] = 'Restablece tu contraseña de MotosHub'
-    mensaje['From'] = configuracion.smtp_remitente or configuracion.smtp_usuario
+    mensaje['From'] = _remitente()
     mensaje['To'] = email
     mensaje.set_content(_cuerpo_texto(nombres, enlace, minutos))
     mensaje.add_alternative(_cuerpo_html(nombres, enlace, minutos), subtype='html')

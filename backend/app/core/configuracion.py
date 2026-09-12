@@ -7,6 +7,7 @@ escribe directamente en el codigo fuente.
 
 from urllib.parse import quote_plus
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -68,6 +69,17 @@ class Configuracion(BaseSettings):
             f'mysql+pymysql://{self.db_user}:{clave}'
             f'@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4'
         )
+
+
+    @field_validator('smtp_password')
+    @classmethod
+    def sin_espacios(cls, valor: str) -> str:
+        """Google muestra la contrasena de aplicacion en grupos de cuatro.
+
+        Al copiarla se arrastran los espacios y el servidor la rechaza, asi que
+        se limpian aqui en lugar de exigir que se peguen a mano sin ellos.
+        """
+        return valor.replace(' ', '').strip()
 
 
 configuracion = Configuracion()
