@@ -16,6 +16,10 @@ python-dotenv==1.2.3
 python-jose[cryptography]==3.5.0
 bcrypt==5.0.0
 
+# Generacion de documentos del quinto avance
+reportlab==4.4.4   # reporte diario y facturas en PDF
+openpyxl==3.1.5    # reporte diario en Excel
+
 # Pruebas automaticas
 pytest==9.1.1
-httpx==0.28.1
+httpx==0.28.1      # tambien es el cliente que llama al servicio de IA

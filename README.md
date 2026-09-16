@@ -1,23 +1,40 @@
-# Proyecto — Cuarto Avance: React + Vite + FastAPI + MySQL
+# Proyecto — Quinto Avance: React + Vite + FastAPI + MySQL + IA
 ### MotosHub / JHM Tech Solutions (Ficha 3406211)
 
 Aplicación full-stack que integra un Frontend en **React + Vite + Tailwind CSS**
-con un Backend en **Python + FastAPI** y una base de datos **MySQL**,
-implementando autenticación JWT, hashing de contraseñas, validaciones en ambos
-lados, control de roles, CRUD completo y paneles diferenciados para
-Administrador, Empleado y Cliente.
+con un Backend en **Python + FastAPI** y una base de datos **MySQL**.
 
-Este avance **conserva por completo** la interfaz construida en los avances
-anteriores (componentes reutilizables, Tailwind, registro, login, recuperación
-de contraseña, validaciones, Navbar, Footer, carrusel y botón flotante de
-WhatsApp) y **reemplaza el Backend de Node.js/Express por FastAPI**.
+Sobre la base construida en los avances anteriores —autenticación JWT, hashing
+de contraseñas, control de roles, CRUD y paneles diferenciados—, el quinto
+avance añade la **gestión comercial completa**:
+
+| Módulo | Qué hace |
+|---|---|
+| **Ventas** | Registro de ventas de productos y servicios, con detalle, IVA y movimiento de inventario |
+| **Historial** | Consulta filtrable por fecha, cliente, artículo, estado, forma de pago y valor |
+| **Facturación** | Emisión de facturas de venta y descarga en PDF |
+| **Reportes** | Reporte diario de ventas en pantalla, en PDF y en Excel |
+| **Dashboards** | Indicadores, gráfico de barras y gráfico lineal, diferenciados por rol |
+| **PQR** | Peticiones, quejas, reclamos y sugerencias, con radicado y seguimiento |
+| **Chatbot** | Asistente de atención al cliente integrado con Inteligencia Artificial |
+| **Despliegue** | Configuración lista para producción (ver [`DESPLIEGUE.md`](DESPLIEGUE.md)) |
+
+Todo se construyó **sobre el proyecto existente**: no se rehízo la interfaz ni
+se cambió la arquitectura. Los componentes, el sistema de diseño, el registro,
+el inicio de sesión, la recuperación de contraseña, el catálogo, el Navbar, el
+Footer, el carrusel y el botón de WhatsApp siguen siendo los mismos.
 
 ## Arquitectura
 
 ```
 React + Vite  ──HTTP/JSON──►  FastAPI  ──SQLAlchemy──►  MySQL
  (puerto 5173)                (puerto 8000)             (puerto 3306)
+                                  │
+                                  └──HTTPS──►  Servicio de IA (chatbot)
 ```
+
+El Frontend nunca habla con el servicio de IA: la petición sale del Backend,
+que es donde vive la API Key. El navegador no llega a saber cuál es.
 
 ```
 proyecto/
@@ -31,13 +48,29 @@ proyecto/
     │   ├── routers/    → endpoints de la API
     │   ├── dependencias.py → protección de endpoints y control de roles
     │   ├── errores.py      → excepciones de negocio
-    │   └── main.py         → aplicación, CORS y manejadores de error
-    ├── database/schema.sql → script de creación de la base de datos
+    │   ├── main.py         → aplicación, CORS y manejadores de error
+    │   └── servicios/      → generación de PDF y Excel, e integración con la IA
+    ├── database/           → scripts SQL (esquema completo y migración)
     ├── postman/            → colección de pruebas para Postman
-    ├── scripts/            → script de evidencias de la API
+    ├── scripts/            → verificación de la API y datos de demostración
     ├── tests/              → pruebas automáticas (pytest)
     └── requirements.txt
 ```
+
+Dentro de `backend/app/`:
+
+| Carpeta | Qué contiene |
+|---|---|
+| `core/` | Configuración, conexión a la base de datos, seguridad y correo |
+| `models/` | Modelos ORM: una clase por tabla |
+| `schemas/` | Esquemas Pydantic: validación de lo que entra y forma de lo que sale |
+| `crud/` | Consultas y reglas de negocio |
+| `routers/` | Endpoints agrupados por módulo |
+| `servicios/` | `pdf.py`, `excel.py`, `reportes.py` e `ia.py` |
+
+La separación entre **modelos** (`models/`) y **esquemas** (`schemas/`) se
+mantiene en todo el proyecto: los primeros describen la tabla, los segundos
+lo que viaja por la API.
 
 ## Puesta en marcha
 
@@ -49,24 +82,42 @@ Con MySQL en ejecución (XAMPP, WAMP o servicio propio):
 mysql -u root -p < backend/database/schema.sql
 ```
 
-Crea la base `bd_jhm_tech_solutions` con las tablas `roles`, `permisos`,
-`roles_permisos`, `usuarios`, `productos` y `servicios`, más el catálogo y los
-usuarios de prueba.
+Crea la base `bd_jhm_tech_solutions` con las **13 tablas** del proyecto, más el
+catálogo y los usuarios de prueba:
 
-> Si ya tenías la base de datos del avance anterior y no quieres recargar el
-> catálogo, ejecuta estos dos scripts en su lugar:
+| Del cuarto avance | Del quinto avance |
+|---|---|
+| `roles`, `permisos`, `roles_permisos` | `ventas`, `detalle_ventas` |
+| `usuarios`, `tokens_recuperacion` | `facturas`, `pqr` |
+| `productos`, `servicios` | `conversaciones`, `mensajes` |
+
+> **Si ya tienes la base del cuarto avance con datos, no ejecutes
+> `schema.sql`**: borraría el catálogo. Usa la migración, que solo agrega lo
+> nuevo:
 >
 > ```bash
-> mysql -u root -p < backend/database/actualizar_imagenes.sql
-> mysql -u root -p < backend/database/recuperacion_password.sql
-> mysql -u root -p < backend/database/usuarios_demo.sql
+> mysql -u root -p bd_jhm_tech_solutions < backend/database/quinto_avance.sql
 > ```
 >
-> El primero agrega la columna `imagen` a la tabla `servicios` y apunta las
-> fotos a los archivos locales; el segundo crea la tabla `tokens_recuperacion`;
-> el tercero agrega los usuarios Empleado y Cliente. Ninguno borra registros.
-> Los usuarios creados con el Backend de Node.js siguen funcionando, porque el
-> formato del hash bcrypt es el mismo.
+> Crea las seis tablas nuevas y registra los permisos de los módulos añadidos.
+> No toca usuarios, productos ni servicios, y se puede ejecutar varias veces
+> sin riesgo.
+
+#### Datos de demostración
+
+Los Dashboards y los reportes no se pueden evidenciar con la base vacía. Este
+script crea un historial repartido en las últimas semanas, pasando por el mismo
+código que usa la API:
+
+```bash
+cd backend
+python scripts/datos_demo.py            # crear
+python scripts/datos_demo.py --limpiar  # borrar solo lo que creó
+```
+
+Genera unas 55 ventas con su factura y 5 PQR en distintos estados. Al terminar
+repone el inventario a los valores que tenía, para que el catálogo siga
+mostrando disponibilidad.
 
 ### 2. Backend (FastAPI)
 
@@ -96,6 +147,33 @@ npm run dev
 ```
 
 Abre `http://localhost:5173`.
+
+### 4. Chatbot con Inteligencia Artificial (opcional)
+
+El chatbot **funciona sin configurar nada**: responde con un motor de reglas
+que consulta la misma base de datos. Para que responda con IA, añade en
+`backend/.env`:
+
+```env
+IA_PROVEEDOR=anthropic        # o "openai"
+IA_API_KEY=tu-clave-aqui
+```
+
+`openai` sirve también para cualquier proveedor con API compatible con
+`/chat/completions` (Groq, OpenRouter, DeepSeek, Together...) indicando
+`IA_URL_BASE`.
+
+Comprueba el resultado en `http://localhost:8000/api/chatbot/estado`.
+
+> La API Key va **solo** en el `.env` del Backend, que está en `.gitignore`.
+> Nunca en el código, nunca en el repositorio y nunca en una variable `VITE_`:
+> todo lo que empieza por `VITE_` acaba dentro del JavaScript que descarga
+> cualquier visitante.
+
+### 5. Despliegue en producción
+
+Ver [`DESPLIEGUE.md`](DESPLIEGUE.md) para el paso a paso en Railway, las
+variables de entorno de cada servicio y la configuración de CORS.
 
 ## Usuarios de prueba
 
@@ -134,6 +212,36 @@ inicio de sesión: se registra siempre con el rol Cliente.
 | POST   | `/api/servicios`                  | Administrador / Empleado       |
 | PUT    | `/api/servicios/{id}`             | Administrador / Empleado       |
 | DELETE | `/api/servicios/{id}`             | Administrador                  |
+
+### Módulos del quinto avance
+
+| Método | Ruta                                   | Acceso                     |
+|--------|----------------------------------------|----------------------------|
+| POST   | `/api/ventas`                          | Cualquier usuario con sesión |
+| GET    | `/api/ventas`                          | Todos (el cliente ve solo las suyas) |
+| GET    | `/api/ventas/{id}`                     | Su dueño, Administrador o Empleado |
+| PATCH  | `/api/ventas/{id}/estado`              | Administrador / Empleado   |
+| POST   | `/api/facturas`                        | Administrador / Empleado   |
+| GET    | `/api/facturas`                        | Todos (el cliente ve solo las suyas) |
+| GET    | `/api/facturas/{id}`                   | Su dueño, Administrador o Empleado |
+| GET    | `/api/facturas/{id}/pdf`               | Su dueño, Administrador o Empleado |
+| PATCH  | `/api/facturas/{id}/estado`            | Administrador / Empleado   |
+| GET    | `/api/reportes/ventas-diarias`         | Administrador / Empleado   |
+| GET    | `/api/reportes/ventas-diarias/pdf`     | Administrador / Empleado   |
+| GET    | `/api/reportes/ventas-diarias/excel`   | Administrador / Empleado   |
+| POST   | `/api/pqr`                             | Cualquier usuario con sesión |
+| GET    | `/api/pqr`                             | Todos (el cliente ve solo las suyas) |
+| GET    | `/api/pqr/{id}`                        | Su dueño, Administrador o Empleado |
+| PATCH  | `/api/pqr/{id}`                        | Administrador / Empleado   |
+| GET    | `/api/estadisticas/resumen`            | Todos (recortado por rol)  |
+| GET    | `/api/estadisticas/ventas`             | Todos (recortado por rol)  |
+| GET    | `/api/chatbot/estado`                  | Público                    |
+| POST   | `/api/chatbot/mensaje`                 | Público (mejor con sesión) |
+| GET    | `/api/chatbot/conversaciones/{id}`     | Su dueño, Administrador o Empleado |
+
+**45 endpoints en total.** Donde dice «el cliente ve solo las suyas», el
+recorte lo hace FastAPI a partir del rol del token: el Frontend llama a la
+misma ruta para los tres roles y recibe respuestas distintas.
 
 Los endpoints protegidos requieren la cabecera:
 
@@ -220,17 +328,59 @@ página y en la página de contacto.
 - **Navbar con el usuario autenticado** y cierre de sesión.
 - **Botón flotante de WhatsApp** conservado, independiente del Backend.
 - **Documentación automática Swagger** en `/docs`.
-- **Colección de Postman** con 33 peticiones listas para ejecutar.
-- **54 pruebas automáticas** que recorren toda la API (`pytest`).
+- **Documentación automática Swagger** en `/docs`.
+
+### Añadido en el quinto avance
+
+- **Módulo de ventas**: registro de productos y servicios en una misma
+  operación, con subtotal, descuentos, IVA, total, forma de pago y estado.
+  Los precios se leen del catálogo, nunca de la petición.
+- **Detalle de venta** que guarda una copia del nombre y del precio del
+  momento: si el artículo cambia de precio o se borra, el histórico no miente.
+- **Movimiento de inventario**: vender descuenta unidades y anular las
+  devuelve.
+- **Historial de ventas** filtrable por fecha, cliente, producto, servicio,
+  estado, forma de pago, valor y texto libre.
+- **Facturación**: la factura copia los datos del cliente al emitirse, se
+  consulta por número, cliente o fecha, y se descarga en **PDF**.
+- **Reporte diario de ventas** en tres formatos (**JSON, PDF y Excel**) a
+  partir de un único cálculo, para que nunca discrepen entre sí.
+- **Dashboards por rol** con tarjetas de indicadores, **gráfico de barras** y
+  **gráfico lineal**, filtrables por fecha, agrupación, estado, forma de pago,
+  artículo y cliente.
+- **Gráficos en SVG propio**, sin añadir ninguna librería al proyecto.
+- **Módulo de PQR** con número de radicado, cuatro estados y respuesta del
+  equipo, visible para el cliente en su panel.
+- **Chatbot con Inteligencia Artificial** que responde sobre el catálogo real,
+  orienta el proceso de compra y encauza las PQR. Funciona con o sin sesión
+  iniciada, y sigue atendiendo con su motor de reglas si no hay API Key o si
+  el proveedor falla.
+- **API Key protegida**: vive solo en el `.env` del Backend, nunca llega al
+  navegador y el endpoint de estado jamás la devuelve.
+- **Carrito de compras** en el sitio público, con confirmación que registra la
+  venta real y entrega la factura.
+- **Colección de Postman** con 84 peticiones listas para ejecutar.
+- **118 pruebas automáticas** que recorren toda la API (`pytest`).
+- **Configuración de despliegue** para Railway y para plataformas con Docker.
 
 ## Verificación realizada
 
-- `pytest` → 54 pruebas en verde (registro, login, JWT, roles, CRUD,
-  validaciones y respuestas de error).
-- Recorrido completo de la API contra **MySQL real** con
-  `python scripts/verificar_api.py`.
-- Inicio de sesión y paneles comprobados en el navegador con el Frontend de
-  Vite consumiendo FastAPI.
+- `pytest` → **118 pruebas en verde**: registro, login, JWT, roles, CRUD,
+  validaciones, ventas, stock, facturación, reportes en PDF y Excel, PQR,
+  Dashboards por rol y chatbot (con el proveedor de IA simulado).
+- Recorrido de la API contra **MySQL real**:
+
+  ```bash
+  python scripts/verificar_api.py             # avance 4
+  python scripts/verificar_quinto_avance.py   # avance 5
+  ```
+
+  El segundo script deja anuladas las ventas que crea, para no ensuciar el
+  historial.
+- Compra completa hecha desde el navegador: catálogo → carrito → confirmación
+  → factura en PDF, comprobando después en MySQL que la venta, la factura y el
+  descuento de stock quedaron registrados.
+- PDF y Excel abiertos y revisados: contenido, totales y formato.
 
 ## Notas para la entrega
 

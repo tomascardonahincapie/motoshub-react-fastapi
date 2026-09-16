@@ -1,17 +1,85 @@
 {
   "info": {
-    "name": "MotosHub API - Cuarto Avance (FastAPI)",
-    "description": "Coleccion de pruebas de la API del cuarto avance (React + Vite + FastAPI + MySQL).\n\nOrden sugerido:\n1. Ejecutar 'Login administrador' (guarda el token automaticamente en la variable token_admin).\n2. Ejecutar 'Login empleado' y 'Login cliente' para probar el control de roles.\n3. Recorrer el resto de carpetas.\n\nFicha 3406211 - Instructor: Jhan Hader Munoz",
+    "name": "MotosHub API - Quinto Avance (FastAPI)",
+    "description": "Coleccion de pruebas de la API de MotosHub (React + Vite + FastAPI + MySQL).\n\nCubre los avances cuarto y quinto: autenticacion con JWT, control de roles,\nCRUD, ventas, facturacion, reportes en PDF y Excel, PQR, Dashboards y el\nchatbot integrado con Inteligencia Artificial.\n\nOrden sugerido:\n1. Ejecutar las tres peticiones de \"Login\" de la carpeta 02: guardan los\n   tokens en las variables de la coleccion.\n2. Recorrer las carpetas en orden. Cada peticion deja en las variables lo\n   que necesita la siguiente (id_venta, id_factura, id_pqr...).\n\nLa coleccion apunta a {{base_url}}, que por omision es http://localhost:8000.\nPara probar el despliegue, cambia esa variable por la URL publica.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
-    { "key": "token_admin", "value": "", "type": "string" },
-    { "key": "token_empleado", "value": "", "type": "string" },
-    { "key": "token_cliente", "value": "", "type": "string" },
-    { "key": "id_usuario", "value": "", "type": "string" },
-    { "key": "id_producto", "value": "", "type": "string" },
-    { "key": "id_servicio", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_empleado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_cliente",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_usuario",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_producto",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_servicio",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversacion_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_factura",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_pqr",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_venta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "numero_factura",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "numero_venta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "radicado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "venta_sin_factura",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
@@ -22,7 +90,15 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/", "host": ["{{base_url}}"], "path": [""] }
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
           }
         },
         {
@@ -30,7 +106,15 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/salud", "host": ["{{base_url}}"], "path": ["salud"] }
+            "url": {
+              "raw": "{{base_url}}/salud",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "salud"
+              ]
+            }
           }
         }
       ]
@@ -56,15 +140,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombres\": \"Tomas\",\n  \"apellidos\": \"Cardona\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1035123456\",\n  \"direccion\": \"Calle 10 #45-20\",\n  \"telefono\": \"3001234567\",\n  \"email\": \"tomas@correo.com\",\n  \"password\": \"Clave123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/usuarios/registro",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "registro"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "registro"
+              ]
             },
             "description": "Registra un cliente. El Backend valida los datos, comprueba que el correo y el documento no esten duplicados y guarda la contrasena como hash bcrypt."
           }
@@ -76,21 +171,34 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 409 Conflict', () => pm.response.to.have.status(409));"]
+                "exec": [
+                  "pm.test('Responde 409 Conflict', () => pm.response.to.have.status(409));"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombres\": \"Tomas\",\n  \"apellidos\": \"Cardona\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1035123456\",\n  \"direccion\": \"Calle 10 #45-20\",\n  \"telefono\": \"3001234567\",\n  \"email\": \"tomas@correo.com\",\n  \"password\": \"Clave123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/usuarios/registro",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "registro"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "registro"
+              ]
             }
           }
         },
@@ -110,15 +218,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombres\": \"Tomas123\",\n  \"apellidos\": \"Cardona\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"12\",\n  \"direccion\": \"Calle 10 #45-20\",\n  \"telefono\": \"abc\",\n  \"email\": \"correo-malo\",\n  \"password\": \"123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/usuarios/registro",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "registro"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "registro"
+              ]
             },
             "description": "Demuestra que el Backend valida de nuevo, aunque React ya haya validado."
           }
@@ -142,15 +261,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@jhmtech.com\",\n  \"password\": \"Admin1234\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -170,15 +300,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"empleado@jhmtech.com\",\n  \"password\": \"Empleado123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -198,15 +339,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"cliente@jhmtech.com\",\n  \"password\": \"Cliente123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -217,21 +369,34 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 401', () => pm.response.to.have.status(401));"]
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@jhmtech.com\",\n  \"password\": \"ClaveIncorrecta1\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         }
@@ -259,8 +424,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/usuarios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
             }
           }
         },
@@ -280,11 +450,21 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer token.falso.123" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer token.falso.123"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
             }
           }
         },
@@ -304,11 +484,21 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
             },
             "description": "El control definitivo lo hace el Backend: aunque el Frontend oculte el panel, la API tambien lo impide."
           }
@@ -320,17 +510,29 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 403', () => pm.response.to.have.status(403));"]
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_empleado}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
             }
           }
         }
@@ -357,11 +559,21 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
             }
           }
         },
@@ -369,11 +581,22 @@
           "name": "Consultar un usuario (GET)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios/{{id_usuario}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "{{id_usuario}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{id_usuario}}"
+              ]
             }
           }
         },
@@ -384,15 +607,23 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 201', () => pm.response.to.have.status(201));"]
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -400,8 +631,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/usuarios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
             }
           }
         },
@@ -412,15 +648,23 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
               }
             }
           ],
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -428,8 +672,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/usuarios/{{id_usuario}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "{{id_usuario}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{id_usuario}}"
+              ]
             }
           }
         },
@@ -440,21 +690,39 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
               }
             }
           ],
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"inactivo\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"inactivo\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/api/usuarios/{{id_usuario}}/estado",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "{{id_usuario}}", "estado"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{id_usuario}}",
+                "estado"
+              ]
             }
           }
         },
@@ -463,14 +731,30 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"activo\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"activo\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/api/usuarios/{{id_usuario}}/estado",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "{{id_usuario}}", "estado"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{id_usuario}}",
+                "estado"
+              ]
             }
           }
         },
@@ -481,17 +765,30 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
               }
             }
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios/{{id_usuario}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "{{id_usuario}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{id_usuario}}"
+              ]
             }
           }
         },
@@ -502,17 +799,30 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 404', () => pm.response.to.have.status(404));"]
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/usuarios/9999",
-              "host": ["{{base_url}}"],
-              "path": ["api", "usuarios", "9999"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "9999"
+              ]
             }
           }
         }
@@ -528,7 +838,9 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 200 sin token', () => pm.response.to.have.status(200));"]
+                "exec": [
+                  "pm.test('Responde 200 sin token', () => pm.response.to.have.status(200));"
+                ]
               }
             }
           ],
@@ -537,8 +849,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/productos",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
             }
           }
         },
@@ -549,18 +866,33 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 401', () => pm.response.to.have.status(401));"]
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Producto sin permiso\",\n  \"precio\": 10000\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Producto sin permiso\",\n  \"precio\": 10000\n}"
+            },
             "url": {
               "raw": "{{base_url}}/api/productos",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
             }
           }
         },
@@ -581,8 +913,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -590,8 +928,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/productos",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
             }
           }
         },
@@ -602,8 +945,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/productos/{{id_producto}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos", "{{id_producto}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{id_producto}}"
+              ]
             }
           }
         },
@@ -614,15 +963,23 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
               }
             }
           ],
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -630,8 +987,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/productos/{{id_producto}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos", "{{id_producto}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{id_producto}}"
+              ]
             }
           }
         },
@@ -642,17 +1005,30 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 403', () => pm.response.to.have.status(403));"]
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));"
+                ]
               }
             }
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_empleado}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/productos/{{id_producto}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos", "{{id_producto}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{id_producto}}"
+              ]
             },
             "description": "Solo el Administrador puede eliminar productos."
           }
@@ -664,17 +1040,30 @@
               "listen": "test",
               "script": {
                 "type": "text/javascript",
-                "exec": ["pm.test('Responde 200', () => pm.response.to.have.status(200));"]
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
               }
             }
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/productos/{{id_producto}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "productos", "{{id_producto}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "{{id_producto}}"
+              ]
             }
           }
         }
@@ -690,8 +1079,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/servicios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "servicios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios"
+              ]
             }
           }
         },
@@ -712,8 +1106,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -721,8 +1121,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/servicios",
-              "host": ["{{base_url}}"],
-              "path": ["api", "servicios"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios"
+              ]
             }
           }
         },
@@ -733,8 +1138,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/servicios/{{id_servicio}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "servicios", "{{id_servicio}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "{{id_servicio}}"
+              ]
             }
           }
         },
@@ -743,8 +1154,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_empleado}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -752,8 +1169,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/servicios/{{id_servicio}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "servicios", "{{id_servicio}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "{{id_servicio}}"
+              ]
             }
           }
         },
@@ -761,12 +1184,2131 @@
           "name": "Eliminar servicio como administrador (DELETE)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/api/servicios/{{id_servicio}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "servicios", "{{id_servicio}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios",
+                "{{id_servicio}}"
+              ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Modulo de ventas",
+      "item": [
+        {
+          "name": "Registrar una venta (cliente compra en linea)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            },
+            "description": "Los precios se toman del catalogo, no de esta peticion. Descuenta el stock y emite la factura.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metodo_pago\": \"efectivo\",\n  \"generar_factura\": true,\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 7,\n      \"cantidad\": 1\n    },\n    {\n      \"tipo_item\": \"servicio\",\n      \"id_item\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.id_venta) pm.collectionVariables.set(\"id_venta\", datos.id_venta);",
+                  "if (datos.numero_venta) pm.collectionVariables.set(\"numero_venta\", datos.numero_venta);",
+                  "if (datos.id_factura) pm.collectionVariables.set(\"id_factura\", datos.id_factura);",
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Devuelve numero de venta\", () => pm.expect(pm.response.json().numero_venta).to.include(\"V-\"));",
+                  "pm.test(\"Emite la factura\", () => pm.expect(pm.response.json().numero_factura).to.include(\"FV-\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar una venta a nombre de un cliente (empleado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": 4,\n  \"metodo_pago\": \"tarjeta\",\n  \"observaciones\": \"Venta en tienda\",\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 10,\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Intentar comprar mas unidades de las que hay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            },
+            "description": "El Backend rechaza la venta antes de tocar el inventario.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 7,\n      \"cantidad\": 9999\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vender sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 7,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historial completo (administrador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historial filtrado por fecha, estado y forma de pago",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas?desde=2026-09-01&hasta=2026-09-30&estado=pagada&metodo_pago=efectivo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-09-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-09-30"
+                },
+                {
+                  "key": "estado",
+                  "value": "pagada"
+                },
+                {
+                  "key": "metodo_pago",
+                  "value": "efectivo"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historial filtrado por producto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas?producto_id=7",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "producto_id",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar por numero de venta o cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas?busqueda=V-2026",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "busqueda",
+                  "value": "V-2026"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El cliente solo ve sus propias compras",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            },
+            "description": "Mismo endpoint que el administrador; FastAPI recorta el resultado."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar una venta con su detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas/{{id_venta}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas",
+                "{{id_venta}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular una venta y devolver el inventario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas/{{id_venta}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas",
+                "{{id_venta}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"anulada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El cliente no puede anular ventas",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas/{{id_venta}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas",
+                "{{id_venta}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"anulada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 - Facturacion",
+      "item": [
+        {
+          "name": "Registrar una venta sin facturar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ventas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ventas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": 4,\n  \"metodo_pago\": \"transferencia\",\n  \"generar_factura\": false,\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 12,\n      \"cantidad\": 3\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.id_venta) pm.collectionVariables.set(\"venta_sin_factura\", datos.id_venta);",
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Emitir la factura de esa venta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venta_id\": \"{{venta_sin_factura}}\",\n  \"observaciones\": \"Pago recibido en tienda\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.id_factura) pm.collectionVariables.set(\"id_factura\", datos.id_factura);",
+                  "if (datos.numero_factura) pm.collectionVariables.set(\"numero_factura\", datos.numero_factura);",
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Intentar facturar dos veces la misma venta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ]
+            },
+            "description": "Una venta solo puede facturarse una vez.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venta_id\": \"{{venta_sin_factura}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar todas las facturas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar factura por numero",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas?busqueda={{numero_factura}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ],
+              "query": [
+                {
+                  "key": "busqueda",
+                  "value": "{{numero_factura}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar facturas por fecha y estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas?desde=2026-09-01&hasta=2026-09-30&estado=emitida",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-09-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-09-30"
+                },
+                {
+                  "key": "estado",
+                  "value": "emitida"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar una factura con su detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/{{id_factura}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{id_factura}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Descargar la factura en PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/{{id_factura}}/pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{id_factura}}",
+                "pdf"
+              ]
+            },
+            "description": "Devuelve el PDF. En Postman se ve con \"Save Response\"."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es un PDF\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/pdf\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El cliente descarga su propia factura",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/{{id_factura}}/pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{id_factura}}",
+                "pdf"
+              ]
+            },
+            "description": "Funciona solo si la factura es suya; si no, responde 403."
+          }
+        },
+        {
+          "name": "Marcar la factura como pagada",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/facturas/{{id_factura}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "facturas",
+                "{{id_factura}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"pagada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 - Reportes",
+      "item": [
+        {
+          "name": "Reporte diario de ventas (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reportes/ventas-diarias",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "ventas-diarias"
+              ]
+            },
+            "description": "Sin el parametro fecha devuelve el reporte de hoy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trae el resumen\", () => pm.expect(pm.response.json().resumen).to.have.property(\"total\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte de una fecha concreta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reportes/ventas-diarias?fecha=2026-09-15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "ventas-diarias"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-09-15"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar el reporte a PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reportes/ventas-diarias/pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "ventas-diarias",
+                "pdf"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es un PDF\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/pdf\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exportar el reporte a Excel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reportes/ventas-diarias/excel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "ventas-diarias",
+                "excel"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es un .xlsx\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"spreadsheetml\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Un cliente no puede generar reportes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reportes/ventas-diarias",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "ventas-diarias"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 - Modulo de PQR",
+      "item": [
+        {
+          "name": "Radicar una PQR (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"reclamo\",\n  \"asunto\": \"El casco llego con un rayon\",\n  \"descripcion\": \"Compre un casco la semana pasada y al abrir la caja tenia un rayon en el lateral derecho.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.id_pqr) pm.collectionVariables.set(\"id_pqr\", datos.id_pqr);",
+                  "if (datos.radicado) pm.collectionVariables.set(\"radicado\", datos.radicado);",
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Entrega el radicado\", () => pm.expect(pm.response.json().radicado).to.include(\"PQR-\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechaza una descripcion demasiado corta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"queja\",\n  \"asunto\": \"No sirve\",\n  \"descripcion\": \"Malo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El cliente consulta sus PQR",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El equipo ve todas las PQR",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtrar PQR por tipo y estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr?tipo=reclamo&estado=pendiente",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "reclamo"
+                },
+                {
+                  "key": "estado",
+                  "value": "pendiente"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar una PQR",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{id_pqr}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{id_pqr}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tomar el caso (en proceso)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{id_pqr}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{id_pqr}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_proceso\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder la PQR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{id_pqr}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{id_pqr}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"respondida\",\n  \"respuesta\": \"Lamentamos el inconveniente. Ya dejamos separado un casco nuevo a su nombre, puede pasar por la tienda cuando quiera.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "El cliente no puede responder su propia PQR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{id_pqr}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{id_pqr}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"cerrada\",\n  \"respuesta\": \"Resuelto por mi mismo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11 - Dashboards y estadisticas",
+      "item": [
+        {
+          "name": "Indicadores del administrador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/resumen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "resumen"
+              ]
+            },
+            "description": "Devuelve todas las cifras del sistema."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El administrador ve los usuarios\", () => pm.expect(pm.response.json().indicadores.usuarios).to.not.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Indicadores del empleado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_empleado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/resumen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "resumen"
+              ]
+            },
+            "description": "Ve la operacion comercial, no la gestion de cuentas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No ve el conteo de usuarios\", () => pm.expect(pm.response.json().indicadores.usuarios).to.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Indicadores del cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/resumen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "resumen"
+              ]
+            },
+            "description": "Mismo endpoint, solo sus propias cifras."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Solo cifras propias\", () => pm.expect(pm.response.json().indicadores.valor_inventario).to.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dashboard de ventas por dia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/ventas?agrupar=dia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "agrupar",
+                  "value": "dia"
+                }
+              ]
+            },
+            "description": "Serie para el grafico de barras y el grafico lineal."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trae la serie\", () => pm.expect(pm.response.json().serie).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dashboard agrupado por mes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/ventas?desde=2026-01-01&hasta=2026-12-31&agrupar=mes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-12-31"
+                },
+                {
+                  "key": "agrupar",
+                  "value": "mes"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dashboard filtrado por producto y estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/ventas?producto_id=7&estado=pagada",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "producto_id",
+                  "value": "7"
+                },
+                {
+                  "key": "estado",
+                  "value": "pagada"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sin token no hay Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estadisticas/resumen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estadisticas",
+                "resumen"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 - Chatbot con Inteligencia Artificial",
+      "item": [
+        {
+          "name": "Estado de la integracion con IA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "estado"
+              ]
+            },
+            "description": "Dice si el chatbot responde con IA y con que modelo. Nunca devuelve la API Key, solo si esta configurada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No filtra la clave\", () => pm.expect(pm.response.text()).to.not.include(\"sk-\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preguntar sin haber iniciado sesion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/mensaje",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "mensaje"
+              ]
+            },
+            "description": "El chatbot atiende tambien a visitantes sin cuenta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"Hola, buenas tardes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const datos = pm.response.json();",
+                  "if (datos.conversacion_id) pm.collectionVariables.set(\"conversacion_id\", datos.conversacion_id);",
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preguntar por el catalogo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/mensaje",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "mensaje"
+              ]
+            },
+            "description": "La respuesta sale del catalogo real de la base de datos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"¿Que motos tienen disponibles?\",\n  \"conversacion_id\": \"{{conversacion_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Indica el origen de la respuesta\", () => pm.expect(pm.response.json()).to.have.property(\"origen\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preguntar por los servicios del taller",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/mensaje",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"¿Cuanto cuesta un cambio de aceite?\",\n  \"conversacion_id\": \"{{conversacion_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pedir orientacion sobre una PQR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/mensaje",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"Quiero poner una queja por un producto defectuoso\",\n  \"conversacion_id\": \"{{conversacion_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conversar con la sesion iniciada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_cliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/mensaje",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "mensaje"
+              ]
+            },
+            "description": "Con token, el asistente saluda por el nombre y la conversacion queda asociada al usuario.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"¿Como descargo mi factura?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechaza un mensaje vacio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/mensaje",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar la conversacion guardada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chatbot/conversaciones/{{conversacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chatbot",
+                "conversaciones",
+                "{{conversacion_id}}"
+              ]
+            },
+            "description": "Queda registro de lo que se le respondio a cada cliente."
           }
         }
       ]

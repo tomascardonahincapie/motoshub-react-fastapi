@@ -20,7 +20,18 @@ from app.core.base_datos import motor
 from app.core.configuracion import configuracion
 from app.errores import ErrorDeDominio
 from app.middlewares import cabeceras_de_seguridad, registrar_peticion
-from app.routers import auth, productos, servicios, usuarios
+from app.routers import (
+    auth,
+    chatbot,
+    estadisticas,
+    facturas,
+    pqr,
+    productos,
+    reportes,
+    servicios,
+    usuarios,
+    ventas,
+)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s | %(message)s')
 logger = logging.getLogger('motoshub')
@@ -30,15 +41,25 @@ TAGS = [
     {'name': 'Usuarios', 'description': 'Gestión de usuarios, roles y estados (CRUD completo).'},
     {'name': 'Productos', 'description': 'Catálogo de productos de la tienda.'},
     {'name': 'Servicios', 'description': 'Servicios de taller ofrecidos por el negocio.'},
+    {'name': 'Ventas', 'description': 'Registro de ventas e historial con filtros.'},
+    {'name': 'Facturas', 'description': 'Emisión, consulta y descarga de facturas en PDF.'},
+    {'name': 'Reportes', 'description': 'Reporte diario de ventas en JSON, PDF y Excel.'},
+    {'name': 'PQR', 'description': 'Peticiones, quejas, reclamos y sugerencias.'},
+    {'name': 'Estadisticas', 'description': 'Indicadores y gráficos de los Dashboards.'},
+    {'name': 'Chatbot', 'description': 'Asistente de atención al cliente con Inteligencia Artificial.'},
     {'name': 'Sistema', 'description': 'Estado del servicio y comprobación de la base de datos.'},
 ]
 
 DESCRIPCION = """
-API REST del proyecto **MotosHub**, cuarto avance de la competencia React.
+API REST del proyecto **MotosHub**, quinto avance de la competencia React.
 
 * **Frontend:** React + Vite + Tailwind CSS
 * **Backend:** FastAPI (Python)
 * **Base de datos:** MySQL
+* **Inteligencia Artificial:** chatbot de atención al cliente
+
+Módulos del quinto avance: ventas, facturación, reportes en PDF y Excel,
+Dashboards por rol, PQR y chatbot con IA.
 
 La autenticación se realiza mediante **JSON Web Token**. Para probar los
 endpoints protegidos desde esta misma página:
@@ -51,7 +72,7 @@ endpoints protegidos desde esta misma página:
 app = FastAPI(
     title=configuracion.nombre_app,
     description=DESCRIPCION,
-    version='1.0.0',
+    version='2.0.0',
     openapi_tags=TAGS,
 )
 
@@ -73,6 +94,12 @@ app.include_router(auth.router)
 app.include_router(usuarios.router)
 app.include_router(productos.router)
 app.include_router(servicios.router)
+app.include_router(ventas.router)
+app.include_router(facturas.router)
+app.include_router(reportes.router)
+app.include_router(pqr.router)
+app.include_router(estadisticas.router)
+app.include_router(chatbot.router)
 
 
 # ---------------------------------------------------------------------------

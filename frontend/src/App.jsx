@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CarritoProvider } from './context/CarritoContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
+import Chatbot from './components/Chatbot';
+import CarritoPanel from './components/CarritoPanel';
 import Home from './pages/Home';
 import Catalogo from './pages/Catalogo';
 import DetalleCatalogo from './pages/DetalleCatalogo';
@@ -63,7 +66,11 @@ function AppShell() {
       </main>
 
       {!esPanelAdmin && <Footer />}
+
+      {/* El carrito y el asistente acompañan al visitante por todo el sitio */}
+      <CarritoPanel />
       {!esPanelAdmin && <WhatsAppButton />}
+      {!esPanelAdmin && <Chatbot />}
     </div>
   );
 }
@@ -71,9 +78,11 @@ function AppShell() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppShell />
-      </Router>
+      <CarritoProvider>
+        <Router>
+          <AppShell />
+        </Router>
+      </CarritoProvider>
     </AuthProvider>
   );
 }

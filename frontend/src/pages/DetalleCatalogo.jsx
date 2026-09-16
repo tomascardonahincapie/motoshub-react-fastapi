@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import ImagenSegura from '../components/ImagenSegura';
 import IconoWhatsApp from '../components/IconoWhatsApp';
 import TarjetaCatalogo from '../components/TarjetaCatalogo';
+import { useCarrito } from '../context/CarritoContext';
 import { api } from '../utils/api';
 import { enlaceCompra, formatearPrecio } from '../config';
 
@@ -13,6 +14,7 @@ import { enlaceCompra, formatearPrecio } from '../config';
  */
 export default function DetalleCatalogo({ tipo = 'producto' }) {
   const { id } = useParams();
+  const { agregar } = useCarrito();
   const esServicio = tipo === 'servicio';
 
   const [item, setItem] = useState(null);
@@ -161,6 +163,14 @@ export default function DetalleCatalogo({ tipo = 'producto' }) {
 
             {/* Acciones */}
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => agregar(item, tipo)}
+                disabled={agotado}
+                className="btn btn-primario flex-1"
+              >
+                {esServicio ? 'Agendar este servicio' : 'Añadir al carrito'}
+              </button>
               <a
                 href={enlaceCompra(item, tipo)}
                 target="_blank"
@@ -168,15 +178,19 @@ export default function DetalleCatalogo({ tipo = 'producto' }) {
                 className="btn btn-whatsapp flex-1"
               >
                 <IconoWhatsApp className="h-4 w-4" />
-                {esServicio ? 'Agendar por WhatsApp' : 'Comprar por WhatsApp'}
+                Consultar por WhatsApp
               </a>
-              <Link to="/catalogo" className="btn btn-secundario flex-1">
-                Seguir viendo
+            </div>
+
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+              <Link to="/catalogo" className="btn btn-fantasma flex-1">
+                Seguir viendo el catálogo
               </Link>
             </div>
 
-            <p className="mt-4 text-center text-xs text-mist-600 sm:text-left">
-              Te responderemos con la disponibilidad y las formas de pago.
+            <p className="mt-4 text-center text-xs leading-relaxed text-mist-600 sm:text-left">
+              Al confirmar la compra desde el carrito se registra la venta y se emite tu
+              factura, que puedes descargar en PDF desde tu panel.
             </p>
           </div>
         </div>

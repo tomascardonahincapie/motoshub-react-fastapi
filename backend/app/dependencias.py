@@ -13,7 +13,13 @@ from sqlalchemy.orm import Session
 from app.core.base_datos import obtener_sesion
 from app.core.seguridad import decodificar_token
 from app.crud import usuarios as crud_usuarios
-from app.errores import CuentaInactiva, NoAutenticado, SinPermisos, TokenInvalido
+from app.errores import (
+    CuentaInactiva,
+    ErrorDeDominio,
+    NoAutenticado,
+    SinPermisos,
+    TokenInvalido,
+)
 from app.models import Usuario
 
 # Mensajes que el Frontend reconoce para cerrar la sesion automaticamente.
@@ -62,6 +68,24 @@ def usuario_actual(credenciales: Credenciales, sesion: Sesion) -> Usuario:
 UsuarioAutenticado = Annotated[Usuario, Depends(usuario_actual)]
 
 
+def usuario_opcional(credenciales: Credenciales, sesion: Sesion) -> Usuario | None:
+    """Igual que `usuario_actual`, pero sin token devuelve None en lugar de 401.
+
+    La usa el chatbot, que atiende tambien a visitantes que todavia no se han
+    registrado. Un token invalido o caducado se trata como visitante anonimo:
+    la conversacion continua, simplemente sin personalizar.
+    """
+    if credenciales is None or not credenciales.credentials:
+        return None
+    try:
+        return usuario_actual(credenciales, sesion)
+    except ErrorDeDominio:
+        return None
+
+
+UsuarioOpcional = Annotated[Usuario | None, Depends(usuario_opcional)]
+
+
 class ExigirRoles:
     """Dependencia parametrizable que restringe una ruta a ciertos roles."""
 
@@ -81,6 +105,16 @@ AdministradorOEmpleado = Annotated[Usuario, Depends(ExigirRoles('Administrador',
 
 def es_administrador(usuario: Usuario) -> bool:
     return usuario.nombre_rol == 'Administrador'
+
+
+def alcance_de_cliente(usuario: Usuario) -> int | None:
+    """Identificador por el que hay que filtrar las consultas comerciales.
+
+    Un cliente solo puede ver sus propias ventas, facturas y PQR aunque llame
+    al mismo endpoint que el administrador. Devolver None significa "sin
+    restriccion", que es lo que corresponde a Administrador y Empleado.
+    """
+    return usuario.id_usuario if usuario.nombre_rol == 'Cliente' else None
 
 
 def exigir_admin_o_propietario(usuario: Usuario, id_objetivo: int, accion: str) -> None:

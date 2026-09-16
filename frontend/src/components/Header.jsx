@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCarrito } from '../context/CarritoContext';
 import MenuUsuario from './MenuUsuario';
 import Logo from './Logo';
 
@@ -13,6 +14,7 @@ const enlaces = [
 
 export default function Header() {
   const { isAuthenticated } = useAuth();
+  const { totales, abrir } = useCarrito();
   const [desplazado, setDesplazado] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
 
@@ -55,6 +57,28 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Carrito: el número sale del propio carrito, no del Backend */}
+          <button
+            type="button"
+            onClick={abrir}
+            aria-label={`Abrir el carrito (${totales.unidades} artículos)`}
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-ink-850 text-mist-200 transition-colors hover:border-brand-500/50 hover:text-brand-400"
+          >
+            <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
+              <path
+                d="M2.5 3h1.7l1.6 8.4a1.4 1.4 0 0 0 1.4 1.1h6.6a1.4 1.4 0 0 0 1.4-1.1l1.1-5.6H5.2"
+                stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              />
+              <circle cx="8" cy="16" r="1.2" fill="currentColor" />
+              <circle cx="14" cy="16" r="1.2" fill="currentColor" />
+            </svg>
+            {totales.unidades > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1 text-[0.62rem] font-bold text-white">
+                {totales.unidades}
+              </span>
+            )}
+          </button>
+
           {isAuthenticated ? (
             <MenuUsuario />
           ) : (

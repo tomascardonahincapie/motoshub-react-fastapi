@@ -1,15 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminSidebar, { SECCIONES } from '../../components/AdminSidebar';
 import MenuUsuario from '../../components/MenuUsuario';
 import Aviso from '../../components/Aviso';
-import SeccionResumen from './SeccionResumen';
+import Dashboard from '../../components/Dashboard';
+import TablaVentas from '../../components/paneles/TablaVentas';
+import TablaFacturas from '../../components/paneles/TablaFacturas';
+import PanelReportes from '../../components/paneles/PanelReportes';
+import PanelPqr from '../../components/paneles/PanelPqr';
+import FormularioVenta from '../../components/paneles/FormularioVenta';
 import SeccionUsuarios from './SeccionUsuarios';
 import SeccionCatalogo from './SeccionCatalogo';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 
 const DESCRIPCIONES = {
-  resumen: 'Vista general de la operación',
+  resumen: 'Indicadores y gráficos de toda la operación',
+  ventas: 'Registro e historial de ventas',
+  facturas: 'Consulta y descarga de facturas',
+  reportes: 'Reporte diario en PDF y Excel',
+  pqr: 'Peticiones, quejas y reclamos de los clientes',
   usuarios: 'Crea, edita, activa o elimina cuentas',
   productos: 'Administra el catálogo de la tienda',
   servicios: 'Administra los servicios del taller',
@@ -25,6 +34,7 @@ export default function AdminPanel() {
   const [productos, setProductos] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [nuevaVenta, setNuevaVenta] = useState(false);
 
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
@@ -32,7 +42,7 @@ export default function AdminPanel() {
   const avisar = useCallback((texto) => {
     setError('');
     setMensaje(texto);
-    setTimeout(() => setMensaje(''), 3500);
+    setTimeout(() => setMensaje(''), 4000);
   }, []);
 
   const alFallar = useCallback((texto) => {
@@ -40,7 +50,7 @@ export default function AdminPanel() {
     setError(texto);
   }, []);
 
-  // Una sola carga alimenta todas las secciones y el resumen.
+  // Una sola carga alimenta el catálogo, los usuarios y los filtros.
   const cargarTodo = useCallback(async () => {
     setCargando(true);
     try {
@@ -60,9 +70,23 @@ export default function AdminPanel() {
     }
   }, [token, alFallar]);
 
-  useEffect(() => {
-    cargarTodo();
-  }, [cargarTodo]);
+  useEffect(() => { cargarTodo(); }, [cargarTodo]);
+
+  // Opciones de los filtros de los Dashboards y del historial.
+  const articulos = useMemo(() => [
+    ...productos.map((p) => ({ valor: `producto-${p.id_producto}`, etiqueta: p.nombre })),
+    ...servicios.map((s) => ({ valor: `servicio-${s.id_servicio}`, etiqueta: `${s.nombre} (servicio)` })),
+  ], [productos, servicios]);
+
+  const clientes = useMemo(
+    () => usuarios.filter((u) => u.nombre_rol === 'Cliente' && u.estado === 'activo'),
+    [usuarios],
+  );
+
+  const opcionesClientes = useMemo(
+    () => clientes.map((c) => ({ valor: String(c.id_usuario), etiqueta: `${c.nombres} ${c.apellidos}` })),
+    [clientes],
+  );
 
   const seccionActual = SECCIONES.find((s) => s.clave === seccion);
 
@@ -96,6 +120,16 @@ export default function AdminPanel() {
             <p className="truncate text-xs text-mist-500">{DESCRIPCIONES[seccion]}</p>
           </div>
 
+          {['resumen', 'ventas', 'facturas'].includes(seccion) && (
+            <button
+              type="button"
+              onClick={() => setNuevaVenta(true)}
+              className="btn btn-primario hidden h-9 w-auto !py-0 !text-[0.68rem] sm:inline-flex"
+            >
+              Registrar venta
+            </button>
+          )}
+
           <button
             type="button"
             onClick={cargarTodo}
@@ -119,36 +153,46 @@ export default function AdminPanel() {
             <Aviso tipo="exito" onCerrar={() => setMensaje('')}>{mensaje}</Aviso>
             <Aviso tipo="error" onCerrar={() => setError('')}>{error}</Aviso>
 
-            {cargando ? (
-              <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="esqueleto h-28 w-full" />
-                  ))}
-                </div>
-                <div className="esqueleto h-80 w-full" />
-              </div>
-            ) : (
-              <div key={seccion} className="animate-subir">
-                {seccion === 'resumen' && (
-                  <SeccionResumen
-                    usuarios={usuarios}
-                    productos={productos}
-                    servicios={servicios}
-                    irA={setSeccion}
-                  />
-                )}
+            <div key={seccion} className="animate-subir">
+              {seccion === 'resumen' && (
+                <Dashboard
+                  token={token}
+                  rol="Administrador"
+                  articulos={articulos}
+                  clientes={opcionesClientes}
+                />
+              )}
 
-                {seccion === 'usuarios' && (
+              {seccion === 'ventas' && (
+                <TablaVentas
+                  token={token}
+                  puedeGestionar
+                  articulos={articulos}
+                  alRegistrar={cargarTodo}
+                />
+              )}
+
+              {seccion === 'facturas' && <TablaFacturas token={token} puedeGestionar />}
+
+              {seccion === 'reportes' && <PanelReportes token={token} />}
+
+              {seccion === 'pqr' && (
+                <PanelPqr token={token} puedeGestionar avisar={avisar} alFallar={alFallar} />
+              )}
+
+              {seccion === 'usuarios' && (
+                cargando ? <div className="esqueleto h-96 w-full" /> : (
                   <SeccionUsuarios
                     usuarios={usuarios}
                     recargar={cargarTodo}
                     avisar={avisar}
                     alFallar={alFallar}
                   />
-                )}
+                )
+              )}
 
-                {seccion === 'productos' && (
+              {seccion === 'productos' && (
+                cargando ? <div className="esqueleto h-96 w-full" /> : (
                   <SeccionCatalogo
                     tipo="producto"
                     items={productos}
@@ -156,9 +200,11 @@ export default function AdminPanel() {
                     avisar={avisar}
                     alFallar={alFallar}
                   />
-                )}
+                )
+              )}
 
-                {seccion === 'servicios' && (
+              {seccion === 'servicios' && (
+                cargando ? <div className="esqueleto h-96 w-full" /> : (
                   <SeccionCatalogo
                     tipo="servicio"
                     items={servicios}
@@ -166,9 +212,9 @@ export default function AdminPanel() {
                     avisar={avisar}
                     alFallar={alFallar}
                   />
-                )}
-              </div>
-            )}
+                )
+              )}
+            </div>
           </div>
         </main>
 
@@ -176,6 +222,16 @@ export default function AdminPanel() {
           Sesión de {usuario?.nombres} {usuario?.apellidos} · MotosHub · Ficha 3406211
         </footer>
       </div>
+
+      <FormularioVenta
+        abierto={nuevaVenta}
+        onCerrar={() => setNuevaVenta(false)}
+        token={token}
+        clientes={clientes}
+        productos={productos}
+        servicios={servicios}
+        alGuardar={(texto) => { avisar(texto); cargarTodo(); }}
+      />
     </div>
   );
 }

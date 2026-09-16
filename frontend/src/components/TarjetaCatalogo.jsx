@@ -1,17 +1,23 @@
 import { Link } from 'react-router-dom';
 import ImagenSegura from './ImagenSegura';
+import { useCarrito } from '../context/CarritoContext';
 import IconoWhatsApp from './IconoWhatsApp';
 import { enlaceCompra, formatearPrecio } from '../config';
 
 /**
  * Tarjeta del catálogo. Sirve igual para un producto y para un servicio:
- * ambos muestran foto, etiqueta, precio y un botón que abre WhatsApp con el
- * mensaje de compra ya escrito.
+ * ambos muestran foto, etiqueta, precio y los botones para comprar.
+ *
+ * El botón principal añade el artículo al carrito, desde donde la compra se
+ * registra como una venta real en la base de datos. El de WhatsApp se
+ * conserva para quien prefiera cerrar el trato hablando con alguien.
  */
 export default function TarjetaCatalogo({ item, tipo = 'producto', className = '', retardo = 0 }) {
   const esServicio = tipo === 'servicio';
   const id = esServicio ? item.id_servicio : item.id_producto;
   const rutaDetalle = esServicio ? `/catalogo/servicio/${id}` : `/catalogo/producto/${id}`;
+
+  const { agregar } = useCarrito();
 
   const etiqueta = esServicio ? 'Servicio' : item.categoria;
   const agotado = !esServicio && item.stock <= 0;
@@ -82,15 +88,24 @@ export default function TarjetaCatalogo({ item, tipo = 'producto', className = '
           <Link to={rutaDetalle} className="btn btn-fantasma flex-1 !px-3 !text-[0.7rem]">
             Ver detalle
           </Link>
+          <button
+            type="button"
+            onClick={() => agregar(item, tipo)}
+            disabled={agotado}
+            className="btn btn-primario flex-1 !px-3 !text-[0.7rem]"
+            aria-label={`${esServicio ? 'Agendar' : 'Comprar'} ${item.nombre}`}
+          >
+            {esServicio ? 'Agendar' : 'Comprar'}
+          </button>
           <a
             href={enlaceCompra(item, tipo)}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-whatsapp flex-1 !px-3 !text-[0.7rem]"
-            aria-label={`${esServicio ? 'Agendar' : 'Comprar'} ${item.nombre} por WhatsApp`}
+            className="btn btn-whatsapp !w-auto !px-3"
+            aria-label={`Consultar por ${item.nombre} en WhatsApp`}
+            title="Consultar por WhatsApp"
           >
             <IconoWhatsApp className="h-3.5 w-3.5" />
-            {esServicio ? 'Agendar' : 'Comprar'}
           </a>
         </div>
       </div>
