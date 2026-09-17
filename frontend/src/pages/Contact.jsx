@@ -17,7 +17,7 @@ const asuntos = [
 const preguntas = [
   {
     pregunta: '¿Hacen entregas a otras ciudades?',
-    respuesta: 'Sí. Coordinamos el envío de repuestos y accesorios a todo el país a través de transportadora.',
+    respuesta: 'Sí. Coordinamos el transporte de la moto hasta tu ciudad con una empresa especializada.',
   },
   {
     pregunta: '¿Necesito cita para el taller?',

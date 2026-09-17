@@ -12,7 +12,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const ventajas = [
-  'Compra motos, repuestos y accesorios en línea',
+  'Compra tu moto en línea, sin filas',
   'Agenda servicios del taller por WhatsApp',
   'Consulta el estado de tu cuenta cuando quieras',
 ];

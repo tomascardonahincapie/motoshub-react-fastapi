@@ -91,8 +91,8 @@ export default function Catalogo() {
             Nuestro <span className="texto-degradado">catálogo</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-mist-400 sm:text-base">
-            Motos, repuestos y accesorios listos para entrega, y servicios de taller que
-            puedes agendar por WhatsApp en un par de clics.
+            Motocicletas listas para entrega y servicios de taller que puedes agendar
+            en un par de clics.
           </p>
         </div>
       </section>
@@ -102,7 +102,7 @@ export default function Catalogo() {
         <div className="mb-6 flex justify-center">
           <div className="inline-flex gap-1 rounded-xl border border-line bg-ink-900/70 p-1">
             {[
-              { valor: 'productos', etiqueta: 'Productos', total: productos.length },
+              { valor: 'productos', etiqueta: 'Motos', total: productos.length },
               { valor: 'servicios', etiqueta: 'Servicios', total: servicios.length },
             ].map((opcion) => (
               <button
@@ -135,7 +135,7 @@ export default function Catalogo() {
               type="search"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder={pestana === 'productos' ? 'Buscar una moto, casco, repuesto...' : 'Buscar un servicio...'}
+              placeholder={pestana === 'productos' ? 'Buscar por modelo o marca...' : 'Buscar un servicio...'}
               aria-label="Buscar en el catálogo"
               className="campo pl-9"
             />

@@ -87,28 +87,35 @@ def limpiar(sesion) -> None:
 
 
 def _armar_carrito(azar, productos, servicios) -> list[dict]:
-    """Carrito verosimil: casi siempre accesorios, de vez en cuando una moto."""
-    baratos = [p for p in productos if float(p.precio) < 1_000_000 and p.stock > 0]
-    motos = [p for p in productos if float(p.precio) >= 10_000_000 and p.stock > 0]
+    """Carrito verosimil para un concesionario con taller.
 
+    El catalogo de productos son motos, asi que la mayoria de las operaciones
+    del dia son servicios de taller y de vez en cuando entra la venta de una
+    moto, que es lo que dispara la facturacion. Al reves no tendria sentido:
+    nadie vende cuatro motos al dia.
+    """
+    disponibles = [p for p in productos if p.stock > 0]
     items = []
 
-    # Una moto en una de cada seis ventas: son las que mueven la facturacion.
-    if motos and azar.random() < 0.17:
-        items.append({'tipo_item': 'producto', 'id_item': azar.choice(motos).id_producto,
+    # Una moto en una de cada cinco operaciones.
+    if disponibles and azar.random() < 0.20:
+        moto = azar.choice(disponibles)
+        items.append({'tipo_item': 'producto', 'id_item': moto.id_producto,
+                      'cantidad': 1, 'descuento': 0})
+        # Quien compra moto suele salir con la revision incluida.
+        if servicios and azar.random() < 0.45:
+            items.append({'tipo_item': 'servicio',
+                          'id_item': azar.choice(servicios).id_servicio,
+                          'cantidad': 1, 'descuento': 0})
+        return items
+
+    # El resto del dia es taller: uno o dos servicios.
+    for _ in range(azar.randint(1, 2)):
+        items.append({'tipo_item': 'servicio',
+                      'id_item': azar.choice(servicios).id_servicio,
                       'cantidad': 1, 'descuento': 0})
 
-    for _ in range(azar.randint(1, 3)):
-        if baratos and azar.random() < 0.72:
-            articulo = azar.choice(baratos)
-            items.append({'tipo_item': 'producto', 'id_item': articulo.id_producto,
-                          'cantidad': azar.randint(1, 2), 'descuento': 0})
-        elif servicios:
-            items.append({'tipo_item': 'servicio', 'id_item': azar.choice(servicios).id_servicio,
-                          'cantidad': 1, 'descuento': 0})
-
-    return items or [{'tipo_item': 'servicio', 'id_item': servicios[0].id_servicio,
-                      'cantidad': 1, 'descuento': 0}]
+    return items
 
 
 def _momento_del_dia(azar, dia: date) -> datetime:

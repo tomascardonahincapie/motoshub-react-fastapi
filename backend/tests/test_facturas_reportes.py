@@ -4,7 +4,7 @@ from datetime import date
 
 from tests.conftest import cabecera
 
-CASCO = {'tipo_item': 'producto', 'id_item': 1, 'cantidad': 1}
+MOTO = {'tipo_item': 'producto', 'id_item': 1, 'cantidad': 1}
 
 # Firmas de los formatos: un PDF empieza por %PDF y un .xlsx es un ZIP (PK).
 FIRMA_PDF = b'%PDF'
@@ -13,7 +13,7 @@ TIPO_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
 def vender(cliente_http, token, **extra):
-    cuerpo = {'items': [CASCO], 'metodo_pago': 'efectivo', **extra}
+    cuerpo = {'items': [MOTO], 'metodo_pago': 'efectivo', **extra}
     return cliente_http.post('/api/ventas', json=cuerpo, headers=cabecera(token)).json()
 
 
@@ -165,7 +165,7 @@ def test_el_excel_trae_las_tres_hojas_con_los_datos(cliente_http, token_cliente,
     assert libro.sheetnames == ['Ventas', 'Detalle', 'Resumen']
     # Fila 4 es la cabecera y la 5 la primera venta.
     assert libro['Ventas']['B5'].value.startswith('V-')
-    assert libro['Detalle']['E5'].value == 'Casco Integral MT'
+    assert libro['Detalle']['E5'].value == 'Kawasaki Ninja 400'
 
 
 def test_el_reporte_no_esta_al_alcance_de_un_cliente(cliente_http, token_cliente):

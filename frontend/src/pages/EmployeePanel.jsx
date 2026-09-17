@@ -25,8 +25,8 @@ const SECCIONES = [
     descripcion: 'Reporte diario en PDF y Excel' },
   { clave: 'pqr', etiqueta: 'PQR', icono: ICONOS.pqr,
     descripcion: 'Peticiones, quejas y reclamos de los clientes' },
-  { clave: 'productos', etiqueta: 'Productos', icono: ICONOS.productos,
-    descripcion: 'Administra el catálogo de la tienda' },
+  { clave: 'productos', etiqueta: 'Motos', icono: ICONOS.productos,
+    descripcion: 'Administra el catálogo de motocicletas' },
   { clave: 'servicios', etiqueta: 'Servicios', icono: ICONOS.servicios,
     descripcion: 'Administra los servicios del taller' },
 ];

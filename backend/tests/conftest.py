@@ -43,8 +43,9 @@ def sembrar(sesion):
                 email=CLIENTE['email'], password=generar_hash(CLIENTE['password']),
                 rol_id=3, **base),
     ])
-    sesion.add(Producto(nombre='Casco Integral MT', descripcion='Casco certificado DOT.',
-                        precio=480000, stock=20, categoria='Cascos'))
+    # En productos solo hay motos: los accesorios no son parte del negocio.
+    sesion.add(Producto(nombre='Kawasaki Ninja 400', descripcion='Deportiva de 399cc.',
+                        precio=480000, stock=20, categoria='Deportivas'))
     sesion.add(Servicio(nombre='Cambio de Aceite', descripcion='Aceite mas filtro.',
                         precio=70000, duracion_minutos=30,
                         imagen='/img/servicios/cambio-aceite.jpg'))

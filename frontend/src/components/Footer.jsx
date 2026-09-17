@@ -41,7 +41,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-mist-500">
-              Venta de motocicletas, repuestos y accesorios, con taller propio para el
+              Venta de motocicletas nuevas, con taller propio para el
               mantenimiento de tu moto.
             </p>
             <a

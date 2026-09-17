@@ -196,8 +196,14 @@ INTENCIONES = (
     ('factura', ('factura', 'facturar', 'recibo', 'comprobante')),
     ('servicios', ('servicio', 'taller', 'mantenimiento', 'revision', 'reparacion',
                    'cambio de aceite', 'sincronizacion', 'frenos', 'llantas')),
-    ('productos', ('moto', 'motos', 'producto', 'catalogo', 'casco', 'repuesto',
-                   'accesorio', 'precio', 'precios', 'cuanto cuesta', 'vale', 'disponible')),
+    ('no_disponible', ('casco', 'cascos', 'guante', 'guantes', 'chaqueta', 'maleta',
+                       'accesorio', 'accesorios', 'repuesto', 'repuestos', 'aceite',
+                       'bateria', 'pastillas de freno', 'cadena')),
+    ('productos', ('moto', 'motos', 'motocicleta', 'producto', 'catalogo', 'precio',
+                   'precios', 'cuanto cuesta', 'vale', 'disponible', 'naked',
+                   'deportiva', 'deportivas', 'scrambler', 'clasica', 'retro',
+                   'adventure', 'trocha', 'aventura', 'todoterreno', 'urbana',
+                   'ciudad', 'economica', 'barata', 'primera moto', 'carenada')),
     ('contacto', ('horario', 'abren', 'cierran', 'direccion', 'ubicacion', 'donde quedan',
                   'telefono', 'contacto', 'whatsapp', 'correo')),
     ('despedida', ('gracias', 'muchas gracias', 'chao', 'adios', 'hasta luego')),
@@ -224,17 +230,14 @@ def _extraer_presupuesto(mensaje: str) -> int | None:
     return int(cifra.group(1)) if cifra else None
 
 
-# Palabras con las que el cliente nombra cada familia del catalogo.
-#
-# El orden importa y va de lo mas concreto a lo mas general: en "aceite para
-# mi moto" la palabra que manda es "aceite", no "moto", asi que las motos se
-# comprueban de ultimas.
+# Tipos de moto y las palabras con las que el cliente los nombra. Se busca
+# tanto en la categoria como en el nombre del modelo.
 FAMILIAS = (
-    ('lubricante', ('aceite', 'lubricante', 'lubricantes')),
-    ('casco', ('casco', 'cascos')),
-    ('repuesto', ('repuesto', 'repuestos', 'freno', 'frenos', 'cadena', 'bateria', 'pastilla')),
-    ('accesorio', ('accesorio', 'accesorios', 'guante', 'guantes', 'chaqueta', 'maleta')),
-    ('moto', ('moto', 'motos', 'motocicleta', 'naked', 'scooter', 'deportiva')),
+    ('deportiva', ('deportiva', 'deportivas', 'pista', 'carenada', 'ninja', 'gixxer')),
+    ('adventure', ('adventure', 'trocha', 'todoterreno', 'aventura', 'doble proposito')),
+    ('clasica', ('clasica', 'clasicas', 'retro', 'vintage', 'scrambler', 'cafe racer')),
+    ('urbana', ('urbana', 'urbanas', 'ciudad', 'economica', 'barata', 'primera moto')),
+    ('naked', ('naked', 'sin carenado')),
 )
 
 
@@ -298,6 +301,14 @@ def responder_con_reglas(mensaje: str, productos: list, servicios: list, nombre:
             'detalle de los artículos, el IVA y el total.'
         )
 
+    if intencion == 'no_disponible':
+        return (
+            'No vendemos accesorios ni repuestos sueltos: en MotosHub encuentras '
+            'motocicletas y los servicios del taller. Si necesitas un repuesto '
+            'instalado, lo incluimos dentro del servicio correspondiente. '
+            '¿Quieres que te cuente qué motos tenemos o qué hace el taller?'
+        )
+
     if intencion == 'servicios' and servicios:
         lista = '\n'.join(
             f'• {s.nombre}: {_pesos(s.precio)}' for s in servicios[:6]
@@ -353,7 +364,7 @@ def responder_con_reglas(mensaje: str, productos: list, servicios: list, nombre:
 # ---------------------------------------------------------------------------
 SUGERENCIAS = {
     'productos': ['¿Qué motos tienen disponibles?', '¿Cuál es la más económica?',
-                  'Quiero ver los cascos'],
+                  '¿Tienen alguna adventure?'],
     'servicios': ['¿Cuánto cuesta un cambio de aceite?', '¿Cómo agendo una revisión?'],
     'compra': ['¿Qué formas de pago aceptan?', '¿Cómo descargo mi factura?'],
     'pqr': ['Quiero radicar una queja', '¿Cómo consulto mi radicado?'],

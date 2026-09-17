@@ -23,25 +23,36 @@ const ventajas = [
   },
 ];
 
-const cifras = [
-  { valor: '+15', etiqueta: 'Productos en catálogo' },
-  { valor: '+8', etiqueta: 'Servicios de taller' },
-  { valor: '6', etiqueta: 'Marcas disponibles' },
-  { valor: '100%', etiqueta: 'Clientes acompañados' },
-];
+/** Cuenta las marcas distintas mirando la primera palabra del modelo. */
+function contarMarcas(motos) {
+  return new Set(motos.map((m) => m.nombre.trim().split(' ')[0].toLowerCase())).size;
+}
 
 export default function Home() {
   const [destacados, setDestacados] = useState([]);
+  // Las cifras de la portada salen del catálogo, no escritas a mano: antes
+  // decía "+15 productos" y se quedó desfasada al cambiar el catálogo.
+  const [cifras, setCifras] = useState([
+    { valor: '—', etiqueta: 'Motos en catálogo' },
+    { valor: '—', etiqueta: 'Servicios de taller' },
+    { valor: '—', etiqueta: 'Marcas disponibles' },
+    { valor: '100%', etiqueta: 'Clientes acompañados' },
+  ]);
 
-  // Muestra en la portada los últimos productos activos del catálogo real.
   useEffect(() => {
-    api
-      .getProductos()
-      .then((datos) =>
-        setDestacados(
-          (datos.productos || []).filter((item) => item.estado !== 'inactivo').slice(0, 3),
-        ),
-      )
+    Promise.all([api.getProductos(), api.getServicios()])
+      .then(([p, s]) => {
+        const motos = (p.productos || []).filter((item) => item.estado !== 'inactivo');
+        const servicios = (s.servicios || []).filter((item) => item.estado !== 'inactivo');
+
+        setDestacados(motos.slice(0, 3));
+        setCifras([
+          { valor: String(motos.length), etiqueta: 'Motos en catálogo' },
+          { valor: String(servicios.length), etiqueta: 'Servicios de taller' },
+          { valor: String(contarMarcas(motos)), etiqueta: 'Marcas disponibles' },
+          { valor: '100%', etiqueta: 'Clientes acompañados' },
+        ]);
+      })
       .catch(() => setDestacados([]));
   }, []);
 
@@ -64,7 +75,7 @@ export default function Home() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl animate-subir retardo-2 text-base leading-relaxed text-mist-400 sm:text-lg">
-            Motocicletas, repuestos y accesorios con asesoría real. Compra en línea y
+            Motocicletas con asesoría real y taller propio. Compra en línea y
             agenda el mantenimiento de tu moto sin llamadas ni filas.
           </p>
 

@@ -2,12 +2,12 @@
 
 from tests.conftest import cabecera
 
-CASCO = {'tipo_item': 'producto', 'id_item': 1, 'cantidad': 1}
+MOTO = {'tipo_item': 'producto', 'id_item': 1, 'cantidad': 1}
 
 PQR_VALIDA = {
     'tipo': 'reclamo',
-    'asunto': 'El casco llegó con un rayón',
-    'descripcion': 'Al abrir la caja el casco tenía un rayón en el lateral derecho.',
+    'asunto': 'La moto llegó con un rayón en el tanque',
+    'descripcion': 'Al recibir la moto noté un rayón en el lateral derecho del tanque.',
 }
 
 
@@ -56,7 +56,7 @@ def test_el_empleado_responde_la_pqr_y_queda_registrado(cliente_http, token_clie
 
     respuesta = cliente_http.patch(
         f'/api/pqr/{id_pqr}',
-        json={'estado': 'respondida', 'respuesta': 'Le enviamos un casco de reemplazo hoy mismo.'},
+        json={'estado': 'respondida', 'respuesta': 'Agendamos el retoque de pintura sin costo para esta semana.'},
         headers=cabecera(token_empleado),
     )
 
@@ -107,7 +107,7 @@ def test_las_pqr_se_filtran_por_tipo_y_por_estado(cliente_http, token_cliente, t
 # ---------------------------------------------------------------------------
 def vender(cliente_http, token):
     return cliente_http.post(
-        '/api/ventas', json={'items': [CASCO]}, headers=cabecera(token),
+        '/api/ventas', json={'items': [MOTO]}, headers=cabecera(token),
     ).json()
 
 
@@ -173,7 +173,7 @@ def test_la_venta_aparece_en_la_serie_y_en_el_ranking(cliente_http, token_client
     datos = cliente_http.get('/api/estadisticas/ventas', headers=cabecera(token_admin)).json()
 
     assert sum(punto['cantidad'] for punto in datos['serie']) == 1
-    assert datos['ranking'][0]['nombre'] == 'Casco Integral MT'
+    assert datos['ranking'][0]['nombre'] == 'Kawasaki Ninja 400'
     assert datos['por_metodo_pago'][0]['clave'] == 'efectivo'
 
 

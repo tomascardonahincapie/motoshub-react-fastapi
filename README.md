@@ -273,6 +273,23 @@ un rediseño completo:
   buscador y filtros, y formularios en ventana modal con vista previa de la
   imagen.
 
+### Catálogo
+
+En la tabla `productos` solo hay **motocicletas**: el negocio vende motos y
+todo lo que se hace sobre ellas está en `servicios`. La categoría de cada moto
+indica su tipo (Deportivas, Naked, Adventure, Clásicas, Urbanas) y de ahí sale
+el filtro del catálogo.
+
+Si ya tienes la base con los accesorios y repuestos del avance anterior:
+
+```bash
+mysql -u root -p bd_jhm_tech_solutions < backend/database/catalogo_solo_motos.sql
+```
+
+Retira lo que no es una moto y agrega seis modelos más. Las ventas ya
+registradas no se pierden: `detalle_ventas` guarda una copia del nombre y del
+precio de cada artículo vendido.
+
 ### Imágenes
 
 Las fotos del catálogo están en `frontend/public/img/`. Las de Wikimedia

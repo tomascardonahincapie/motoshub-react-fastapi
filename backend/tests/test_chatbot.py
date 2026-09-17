@@ -29,7 +29,7 @@ def con_ia_simulada(monkeypatch):
         recibido['headers'] = opciones.get('headers', {})
         return httpx.Response(
             200,
-            json={'content': [{'type': 'text', 'text': 'Tenemos el Casco Integral MT.'}]},
+            json={'content': [{'type': 'text', 'text': 'Tenemos el Kawasaki Ninja 400.'}]},
             request=httpx.Request('POST', url),
         )
 
@@ -70,11 +70,11 @@ def test_un_visitante_sin_cuenta_puede_preguntar(cliente_http):
 
 def test_el_chatbot_responde_con_el_catalogo_real(cliente_http):
     respuesta = cliente_http.post(
-        '/api/chatbot/mensaje', json={'mensaje': '¿Qué cascos tienen?'},
+        '/api/chatbot/mensaje', json={'mensaje': '¿Qué motos tienen?'},
     ).json()
 
-    # El casco de la semilla cuesta 480.000: el precio sale de la base de datos.
-    assert 'Casco Integral MT' in respuesta['respuesta']
+    # La moto de la semilla cuesta 480.000: el precio sale de la base de datos.
+    assert 'Kawasaki Ninja 400' in respuesta['respuesta']
     assert '480.000' in respuesta['respuesta']
 
 
@@ -114,19 +114,19 @@ def test_rechaza_un_mensaje_vacio(cliente_http):
 # ---------------------------------------------------------------------------
 def test_con_api_key_la_respuesta_viene_del_modelo(cliente_http, con_ia_simulada):
     respuesta = cliente_http.post(
-        '/api/chatbot/mensaje', json={'mensaje': '¿Qué cascos tienen?'},
+        '/api/chatbot/mensaje', json={'mensaje': '¿Qué motos tienen?'},
     ).json()
 
     assert respuesta['con_ia'] is True
     assert respuesta['origen'] == 'modelo-de-prueba'
-    assert respuesta['respuesta'] == 'Tenemos el Casco Integral MT.'
+    assert respuesta['respuesta'] == 'Tenemos el Kawasaki Ninja 400.'
 
 
 def test_al_modelo_se_le_entrega_el_catalogo_de_la_base_de_datos(cliente_http, con_ia_simulada):
     cliente_http.post('/api/chatbot/mensaje', json={'mensaje': '¿Qué venden?'})
 
     instrucciones = con_ia_simulada['json']['system']
-    assert 'Casco Integral MT' in instrucciones
+    assert 'Kawasaki Ninja 400' in instrucciones
     assert 'Cambio de Aceite' in instrucciones
     # Y la clave viaja en la cabecera, no en el cuerpo ni en la URL.
     assert con_ia_simulada['headers']['x-api-key'] == 'clave-de-prueba'
@@ -144,13 +144,13 @@ def test_si_el_proveedor_falla_el_chatbot_sigue_atendiendo(cliente_http, monkeyp
     monkeypatch.setattr(httpx, 'post', falla)
 
     respuesta = cliente_http.post(
-        '/api/chatbot/mensaje', json={'mensaje': '¿Qué cascos tienen?'},
+        '/api/chatbot/mensaje', json={'mensaje': '¿Qué motos tienen?'},
     )
 
     assert respuesta.status_code == 200
     datos = respuesta.json()
     assert datos['con_ia'] is False
-    assert 'Casco Integral MT' in datos['respuesta']
+    assert 'Kawasaki Ninja 400' in datos['respuesta']
 
 
 def test_un_error_del_proveedor_no_filtra_la_clave_en_la_respuesta(cliente_http, monkeypatch):

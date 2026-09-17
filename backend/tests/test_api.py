@@ -356,7 +356,7 @@ def test_solo_el_administrador_elimina_productos(cliente_http, token_empleado, t
 
 def test_rechaza_un_producto_con_precio_negativo(cliente_http, token_admin):
     respuesta = cliente_http.post(
-        '/api/productos', json={'nombre': 'Casco', 'precio': -5}, headers=cabecera(token_admin),
+        '/api/productos', json={'nombre': 'Moto', 'precio': -5}, headers=cabecera(token_admin),
     )
 
     assert respuesta.status_code == 422

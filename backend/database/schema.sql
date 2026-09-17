@@ -151,28 +151,28 @@ VALUES (
 ) ON DUPLICATE KEY UPDATE email = VALUES(email);
 
 -- =========================================================
--- Catálogo inicial: borra lo que haya y carga productos y
--- servicios de ejemplo más completos y realistas
+-- Catálogo inicial: borra lo que haya y carga las motos y
+-- los servicios del taller.
+--
+-- En `productos` solo van motocicletas: el negocio vende motos,
+-- y lo que se hace sobre ellas esta en la tabla `servicios`.
 -- =========================================================
 DELETE FROM productos;
 ALTER TABLE productos AUTO_INCREMENT = 1;
 
 INSERT INTO productos (nombre, descripcion, precio, stock, imagen, categoria) VALUES
-  ('Kawasaki Ninja 400', 'Deportiva bicilíndrica de 399cc, ideal para pista y ciudad. Chasis liviano, frenos ABS y consumo eficiente.', 25500000, 4, '/img/productos/kawasaki-ninja400.webp', 'Motos'),
-  ('Yamaha MT-07', 'Naked de 689cc con motor CP2 de gran torque a bajas revoluciones. Perfecta para uso diario y ruta.', 32900000, 3, '/img/productos/yamaha-mt07.webp', 'Motos'),
-  ('Honda CB500F', 'Naked de 471cc, suave y confiable, pensada para quienes inician en motos de media cilindrada.', 28900000, 5, '/img/productos/honda-cb500f.webp', 'Motos'),
-  ('Suzuki V-Strom 250', 'Adventure liviana de 250cc, suspensión de largo recorrido, ideal para ciudad y trocha ligera.', 21500000, 6, '/img/productos/suzuki-vstrom250.webp', 'Motos'),
-  ('Ducati Monster 937', 'Naked italiana de alta gama, 937cc, electrónica avanzada (control de tracción, tres modos de manejo).', 62900000, 2, '/img/productos/ducati-monster937.webp', 'Motos'),
-  ('BMW G 310 R', 'Naked de 313cc fabricada en colaboración con TVS, frenos ABS de serie y bajo mantenimiento.', 24800000, 4, '/img/productos/bmw-g310r.webp', 'Motos'),
-  ('Casco Integral MT Thunder', 'Casco certificado DOT con visor antirrayado y sistema de ventilación, disponible en varias tallas.', 480000, 20, '/img/productos/casco-integral.jpg', 'Cascos'),
-  ('Casco Modular LS2 Valiant', 'Casco convertible integral/abierto, doble homologación, visor solar interno.', 650000, 12, '/img/productos/casco-modular.jpg', 'Cascos'),
-  ('Chaqueta Adventure Impermeable', 'Chaqueta con protecciones removibles en hombros y codos, forro térmico desmontable.', 380000, 15, '/img/productos/chaqueta-adventure.jpg', 'Accesorios'),
-  ('Guantes de Cuero Racing', 'Guantes reforzados con protección en nudillos y palma antideslizante.', 120000, 30, '/img/productos/guantes-racing.jpg', 'Accesorios'),
-  ('Maleta Lateral Rígida 30L', 'Par de maletas laterales resistentes al agua, con sistema de anclaje rápido.', 890000, 8, '/img/productos/maleta-lateral.jpg', 'Accesorios'),
-  ('Aceite Motul 5100 10W40', 'Aceite semisintético para motor 4T, presentación de 1 litro.', 65000, 60, '/img/productos/aceite-motor.jpg', 'Lubricantes'),
-  ('Kit de Pastillas de Freno', 'Pastillas delanteras y traseras de alto rendimiento, compuesto orgánico.', 95000, 25, '/img/productos/pastillas-freno.jpg', 'Repuestos'),
-  ('Cadena de Transmisión O-Ring', 'Cadena reforzada 520, 120 eslabones, sellado O-ring para mayor duración.', 180000, 15, '/img/productos/cadena-transmision.jpg', 'Repuestos'),
-  ('Batería de Gel 12V', 'Batería libre de mantenimiento, compatible con motos de 150cc a 650cc.', 220000, 18, '/img/productos/bateria-gel.jpg', 'Repuestos');
+  ('Kawasaki Ninja 400', 'Deportiva bicilíndrica de 399cc, ideal para pista y ciudad. Chasis liviano, frenos ABS y consumo eficiente.', 25500000, 4, '/img/productos/kawasaki-ninja400.webp', 'Deportivas'),
+  ('Suzuki Gixxer SF 250', 'Deportiva carenada de 249cc refrigerada por aceite, ligera y cómoda para ciudad y carretera.', 16900000, 5, '/img/productos/suzuki-gixxer250.webp', 'Deportivas'),
+  ('Yamaha MT-07', 'Naked de 689cc con motor CP2 de gran torque a bajas revoluciones. Perfecta para uso diario y ruta.', 32900000, 3, '/img/productos/yamaha-mt07.webp', 'Naked'),
+  ('Honda CB500F', 'Naked de 471cc, suave y confiable, pensada para quienes inician en motos de media cilindrada.', 28900000, 5, '/img/productos/honda-cb500f.webp', 'Naked'),
+  ('Ducati Monster 1200 S', 'Naked italiana de 1198cc y 147 HP, con suspensión Öhlins, frenos Brembo M50 y control electrónico completo.', 72900000, 2, '/img/productos/ducati-monster937.webp', 'Naked'),
+  ('BMW G 310 R', 'Naked de 313cc fabricada en colaboración con TVS, frenos ABS de serie y bajo mantenimiento.', 24800000, 4, '/img/productos/bmw-g310r.webp', 'Naked'),
+  ('KTM 390 Duke', 'Naked austriaca de 373cc y 44 HP, chasis de acero tubular, suspensión WP y tablero TFT a color.', 27500000, 4, '/img/productos/ktm-duke390.webp', 'Naked'),
+  ('Kawasaki Z650', 'Naked de 649cc bicilíndrica, chasis trellis y 68 HP. Equilibrio entre potencia y manejo.', 38500000, 3, '/img/productos/kawasaki-z650.webp', 'Naked'),
+  ('Suzuki V-Strom 250', 'Adventure liviana de 250cc, suspensión de largo recorrido, ideal para ciudad y trocha ligera.', 21500000, 6, '/img/productos/suzuki-vstrom250.webp', 'Adventure'),
+  ('Royal Enfield Classic 350', 'Clásica de 349cc con motor monocilíndrico J-Series, freno de disco y estética retro británica.', 22900000, 3, '/img/productos/royal-enfield-classic350.webp', 'Clasicas'),
+  ('Ducati Scrambler Icon', 'Scrambler de 803cc con estética atemporal, manillar ancho y llantas de tacos ligeros.', 54900000, 2, '/img/productos/ducati-scrambler.webp', 'Clasicas'),
+  ('Honda CB 125F', 'Urbana de 124cc, bajo consumo y mantenimiento sencillo. Ideal como primera moto.', 8900000, 8, '/img/productos/honda-cb125f.webp', 'Urbanas');
 
 DELETE FROM servicios;
 ALTER TABLE servicios AUTO_INCREMENT = 1;

@@ -25,8 +25,8 @@ const SECCIONES = [
     descripcion: 'Peticiones, quejas y reclamos de los clientes' },
   { clave: 'usuarios', etiqueta: 'Usuarios', icono: ICONOS.usuarios,
     descripcion: 'Crea, edita, activa o elimina cuentas' },
-  { clave: 'productos', etiqueta: 'Productos', icono: ICONOS.productos,
-    descripcion: 'Administra el catálogo de la tienda' },
+  { clave: 'productos', etiqueta: 'Motos', icono: ICONOS.productos,
+    descripcion: 'Administra el catálogo de motocicletas' },
   { clave: 'servicios', etiqueta: 'Servicios', icono: ICONOS.servicios,
     descripcion: 'Administra los servicios del taller' },
 ];

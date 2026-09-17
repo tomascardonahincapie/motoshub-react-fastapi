@@ -14,17 +14,10 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parents[2] / 'frontend' / 'public' / 'img'
 PARAMS = '?w=900&h=650&fit=crop&crop=entropy&q=80&fm=jpg'
 
-PRODUCTOS = {
-    'casco-integral':     'photo-1622185135505-2d795003994a',
-    'casco-modular':      'photo-1611457194403-d3aca4cf9d11',
-    'chaqueta-adventure': 'photo-1591195853828-11db59a44f6b',
-    'guantes-racing':     'photo-1620891549027-942fdc95d3f5',
-    'maleta-lateral':     'photo-1575312363468-c8455fb38a76',
-    'aceite-motor':       'photo-1590227763209-821c686b932f',
-    'pastillas-freno':    'photo-1613214150384-14921ff659b2',
-    'cadena-transmision': 'photo-1657873961503-89a65459de2b',
-    'bateria-gel':        'photo-1592318348310-f31b61a931c8',
-}
+# Las fotos de las motos y de los accesorios que antes se descargaban de
+# Unsplash ya no estan aqui: el catalogo son motos, y sus fotos vienen de
+# Wikimedia Commons elegidas modelo por modelo. Ver frontend/public/img/CREDITOS.md.
+PRODUCTOS: dict[str, str] = {}
 
 SERVICIOS = {
     'cambio-aceite':        'photo-1542238060-646c7ed65622',
