@@ -338,6 +338,10 @@ página y en la página de contacto.
   token con el identificador, el correo y el rol del usuario.
 - **Recuperación de contraseña** con enlace de un solo uso y vigencia de 30
   minutos. En la base de datos se guarda solo el hash SHA-256 del token.
+  El endpoint es público, así que lleva topes: **3 enlaces por correo cada 15
+  minutos**, **10 solicitudes por equipo cada hora**, y mientras el enlace
+  anterior siga vigente no se envía otro correo. Sin eso, pulsar el botón en
+  bucle llena el buzón de cualquier persona registrada.
 - **Protección de endpoints** con dependencias de FastAPI que comprueban
   existencia del token, firma, expiración, usuario asociado y rol.
 - **Control de roles** (Administrador, Empleado, Cliente) validado en el

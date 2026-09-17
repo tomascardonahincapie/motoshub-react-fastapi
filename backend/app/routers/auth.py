@@ -1,9 +1,11 @@
 """Registro de clientes e inicio de sesion con JWT."""
 
+import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Path as RutaPath, status
+from fastapi import APIRouter, Path as RutaPath, Request, status
 
+from app.core import limitador
 from app.core.configuracion import configuracion
 from app.core.notificaciones import enviar_enlace_recuperacion
 from app.core.seguridad import crear_token, generar_hash, verificar_password
@@ -14,6 +16,7 @@ from app.errores import (
     ConflictoDeNegocio,
     CredencialesInvalidas,
     CuentaInactiva,
+    DemasiadasSolicitudes,
     TokenRecuperacionInvalido,
 )
 from app.models import ROL_CLIENTE
@@ -28,6 +31,17 @@ from app.schemas.auth import (
 )
 from app.schemas.comunes import DetalleDeError, RespuestaOk
 from app.schemas.usuario import UsuarioRegistro
+
+logger = logging.getLogger('motoshub.auth')
+
+# --- Topes de la recuperacion de contrasena --------------------------------
+# El endpoint es publico: sin limite, cualquiera puede llenar el buzon de una
+# persona registrada pulsando el boton en bucle.
+MAXIMO_POR_CORREO = 3      # enlaces por direccion de correo...
+VENTANA_CORREO = 900       # ...cada 15 minutos
+MAXIMO_POR_IP = 10         # solicitudes por equipo...
+VENTANA_IP = 3600          # ...cada hora
+MINUTOS_ENTRE_ENVIOS = 5   # mientras el enlace anterior siga vigente, no se reenvia
 
 router = APIRouter(prefix='/api/auth', tags=['Autenticacion'])
 
@@ -138,18 +152,41 @@ def enmascarar(email: str) -> str:
                 'de la cuenta. Responde siempre lo mismo exista o no el correo, para no '
                 'revelar qué direcciones están registradas.',
 )
-def recuperar_password(datos: SolicitudRecuperacion, sesion: Sesion):
-    usuario = crud_usuarios.obtener_por_email(sesion, datos.email)
-
+def recuperar_password(datos: SolicitudRecuperacion, peticion: Request, sesion: Sesion):
     respuesta = {
         'ok': True,
         'message': 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.',
         'enlace': None,
     }
 
+    # --- Tope por direccion IP -------------------------------------------
+    # Corta a quien dispare el endpoint en bucle contra muchos correos.
+    origen = peticion.client.host if peticion.client else 'desconocido'
+    if not limitador.permitir(f'recuperacion:ip:{origen}', MAXIMO_POR_IP, VENTANA_IP):
+        raise DemasiadasSolicitudes(
+            'Se han pedido demasiados enlaces desde este equipo. Espera unos minutos.',
+        )
+
+    # --- Tope por correo --------------------------------------------------
+    # Se aplica antes de mirar si la cuenta existe, para no delatar cuales si.
+    correo = datos.email.strip().lower()
+    if not limitador.permitir(f'recuperacion:correo:{correo}', MAXIMO_POR_CORREO, VENTANA_CORREO):
+        return respuesta
+
+    usuario = crud_usuarios.obtener_por_email(sesion, datos.email)
+
     # Ni una cuenta inexistente ni una inactiva reciben enlace, pero el mensaje
     # de salida es identico para no filtrar cuales existen.
     if usuario is None or usuario.estado == 'inactivo':
+        return respuesta
+
+    # Si el enlace anterior todavia sirve, no se manda otro correo. Asi un
+    # formulario que se reenvie solo no llena el buzon del usuario.
+    if crud_recuperacion.solicitud_reciente(sesion, usuario.id_usuario, MINUTOS_ENTRE_ENVIOS):
+        logger.info(
+            'Ya hay un enlace de recuperación vigente para %s: no se envía otro correo.',
+            usuario.email,
+        )
         return respuesta
 
     token, _ = crud_recuperacion.crear(sesion, usuario)

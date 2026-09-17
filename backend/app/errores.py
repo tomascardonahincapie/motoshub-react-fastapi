@@ -64,6 +64,13 @@ class CredencialesInvalidas(ErrorDeDominio):
     estado = status.HTTP_401_UNAUTHORIZED
 
 
+class DemasiadasSolicitudes(ErrorDeDominio):
+    """Se supero el limite de peticiones de un endpoint publico -> 429."""
+
+    codigo = 'demasiadas_solicitudes'
+    estado = status.HTTP_429_TOO_MANY_REQUESTS
+
+
 class TokenRecuperacionInvalido(ErrorDeDominio):
     """El enlace de recuperacion no existe, ya se uso o expiro -> 400."""
 

@@ -40,6 +40,27 @@ def crear(sesion: Session, usuario: Usuario) -> tuple[str, TokenRecuperacion]:
     return token, registro
 
 
+def solicitud_reciente(sesion: Session, id_usuario: int, minutos: int) -> TokenRecuperacion | None:
+    """Devuelve la ultima solicitud del usuario si todavia esta vigente.
+
+    Sirve para no mandar un correo nuevo cada vez que alguien pulsa el boton:
+    mientras el enlace anterior siga sirviendo, se reutiliza en silencio. Sin
+    esto, un formulario que se reenvie solo llena el buzon del usuario.
+    """
+    limite = datetime.now() - timedelta(minutes=minutos)
+    consulta = (
+        select(TokenRecuperacion)
+        .where(
+            TokenRecuperacion.id_usuario == id_usuario,
+            TokenRecuperacion.usado.is_(False),
+            TokenRecuperacion.fecha_expiracion > datetime.now(),
+            TokenRecuperacion.fecha_creacion > limite,
+        )
+        .order_by(TokenRecuperacion.id_token.desc())
+    )
+    return sesion.scalars(consulta).unique().first()
+
+
 def obtener_por_token(sesion: Session, token: str) -> TokenRecuperacion | None:
     """Busca la solicitud a partir del token en claro."""
     consulta = select(TokenRecuperacion).where(TokenRecuperacion.token_hash == hash_de_token(token))

@@ -8,17 +8,16 @@ El endpoint de mensajes es publico, asi que lleva un limite por direccion IP:
 sin el, cualquiera podria dejar seco el saldo de la API Key con un bucle.
 """
 
-import time
-from collections import defaultdict
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Request
 
+from app.core import limitador
 from app.crud import chat as crud_chat
 from app.crud import productos as crud_productos
 from app.crud import servicios as crud_servicios
 from app.dependencias import Sesion, UsuarioOpcional, alcance_de_cliente
-from app.errores import ConflictoDeNegocio, RecursoNoEncontrado, SinPermisos
+from app.errores import DemasiadasSolicitudes, RecursoNoEncontrado, SinPermisos
 from app.schemas.chat import (
     EstadoChatbot,
     MensajeEnviar,
@@ -35,26 +34,20 @@ router = APIRouter(
 )
 
 # --- Limite de uso por IP ---------------------------------------------------
+# Usa el mismo contador que la recuperacion de contrasena, en app/core.
 VENTANA_SEGUNDOS = 600
 MAXIMO_POR_VENTANA = 25
-_peticiones: dict[str, list[float]] = defaultdict(list)
 
 
 def _comprobar_limite(peticion: Request) -> None:
     """Deja pasar como maximo 25 mensajes cada 10 minutos por direccion IP."""
     origen = peticion.client.host if peticion.client else 'desconocido'
-    ahora = time.monotonic()
 
-    recientes = [t for t in _peticiones[origen] if ahora - t < VENTANA_SEGUNDOS]
-    if len(recientes) >= MAXIMO_POR_VENTANA:
-        _peticiones[origen] = recientes
-        raise ConflictoDeNegocio(
+    if not limitador.permitir(f'chatbot:{origen}', MAXIMO_POR_VENTANA, VENTANA_SEGUNDOS):
+        raise DemasiadasSolicitudes(
             'Has enviado muchos mensajes seguidos. Espera unos minutos o '
             'escríbenos por WhatsApp.',
         )
-
-    recientes.append(ahora)
-    _peticiones[origen] = recientes
 
 
 @router.get(

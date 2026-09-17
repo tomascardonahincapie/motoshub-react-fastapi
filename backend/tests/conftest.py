@@ -52,6 +52,20 @@ def sembrar(sesion):
     sesion.commit()
 
 
+@pytest.fixture(autouse=True)
+def limitador_limpio():
+    """El limitador cuenta en memoria del proceso.
+
+    Sin vaciarlo entre pruebas, las de recuperacion de contrasena se estorban
+    entre si y fallan segun el orden en que corran.
+    """
+    from app.core import limitador
+
+    limitador.reiniciar()
+    yield
+    limitador.reiniciar()
+
+
 @pytest.fixture()
 def sesion_de_prueba():
     motor = crear_motor('sqlite://')

@@ -101,8 +101,19 @@ def test_un_enlace_inventado_se_rechaza(cliente_http):
     assert respuesta.json()['codigo'] == 'token_recuperacion_invalido'
 
 
-def test_pedir_un_enlace_nuevo_anula_el_anterior(cliente_http):
+def test_pedir_un_enlace_nuevo_anula_el_anterior(cliente_http, sesion_de_prueba):
+    """Pasada la espera entre envios, el enlace viejo deja de servir.
+
+    Durante los primeros minutos el Backend reutiliza el enlace vigente en vez
+    de mandar otro correo. Para comprobar que despues si se renueva, se
+    envejece la solicitud a mano en lugar de esperar de verdad.
+    """
     primero = solicitar_enlace(cliente_http, CLIENTE['email'])
+
+    registro = sesion_de_prueba.query(TokenRecuperacion).first()
+    registro.fecha_creacion = datetime.now() - timedelta(minutes=10)
+    sesion_de_prueba.commit()
+
     segundo = solicitar_enlace(cliente_http, CLIENTE['email'])
 
     assert primero != segundo
@@ -201,3 +212,72 @@ def test_restablecer_con_un_token_inventado(cliente_http):
 
     assert respuesta.status_code == 400
     assert respuesta.json()['codigo'] == 'token_recuperacion_invalido'
+
+
+# ---------------------------------------------------------------------------
+# Limites del endpoint publico de recuperacion
+#
+# Sin estos topes, cualquiera puede llenar el buzon de una persona registrada
+# pulsando el boton en bucle. Son 83 correos en una tarde.
+# ---------------------------------------------------------------------------
+def pedir(cliente_http, email='cliente@jhmtech.com'):
+    return cliente_http.post('/api/auth/recuperar-password', json={'email': email})
+
+
+def test_no_manda_un_correo_nuevo_si_el_enlace_anterior_sigue_vigente(cliente_http, sesion_de_prueba):
+    from app.models import TokenRecuperacion
+
+    primera = pedir(cliente_http)
+    segunda = pedir(cliente_http)
+
+    assert primera.status_code == 200
+    assert segunda.status_code == 200
+    # La segunda responde igual, pero no genera otro enlace.
+    assert primera.json()['enlace'] is not None
+    assert segunda.json()['enlace'] is None
+    assert sesion_de_prueba.query(TokenRecuperacion).count() == 1
+
+
+def test_el_tercer_intento_seguido_deja_de_responder_con_enlace(cliente_http):
+    enlaces = [pedir(cliente_http).json()['enlace'] for _ in range(5)]
+
+    # Solo el primero entrega enlace; el resto sale por el tope o por el
+    # enlace vigente, siempre con la misma respuesta de cara al usuario.
+    assert enlaces[0] is not None
+    assert all(e is None for e in enlaces[1:])
+
+
+def test_el_mensaje_no_cambia_aunque_se_alcance_el_tope(cliente_http):
+    mensajes = {pedir(cliente_http).json()['message'] for _ in range(5)}
+
+    # Un mensaje distinto al llegar al tope delataria que el correo existe.
+    assert len(mensajes) == 1
+
+
+def test_el_tope_por_correo_no_delata_las_cuentas_que_existen(cliente_http):
+    registrado = [pedir(cliente_http).json() for _ in range(4)]
+    inventado = [pedir(cliente_http, 'nadie@ejemplo.com').json() for _ in range(4)]
+
+    assert [r['message'] for r in registrado] == [i['message'] for i in inventado]
+
+
+def test_demasiadas_solicitudes_desde_el_mismo_equipo_devuelven_429(cliente_http):
+    # El tope por IP es de 10 por hora, con correos distintos cada vez para
+    # que no salte antes el tope por correo.
+    respuestas = [pedir(cliente_http, f'persona{i}@ejemplo.com') for i in range(12)]
+
+    assert all(r.status_code == 200 for r in respuestas[:10])
+    assert respuestas[10].status_code == 429
+    assert respuestas[10].json()['codigo'] == 'demasiadas_solicitudes'
+
+
+def test_el_limite_no_estorba_al_restablecer_con_un_enlace_valido(cliente_http):
+    enlace = pedir(cliente_http).json()['enlace']
+    token = enlace.rsplit('/', 1)[1]
+
+    respuesta = cliente_http.post(
+        '/api/auth/restablecer-password',
+        json={'token': token, 'password': 'NuevaClave123'},
+    )
+
+    assert respuesta.status_code == 200, respuesta.text
