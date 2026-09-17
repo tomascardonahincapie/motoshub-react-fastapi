@@ -275,6 +275,11 @@ un rediseño completo:
 
 ### Imágenes
 
+Las fotos del catálogo están en `frontend/public/img/`. Las de Wikimedia
+Commons llevan licencia CC BY-SA, que obliga a citar autor y licencia: eso se
+hace en [`frontend/public/img/CREDITOS.md`](frontend/public/img/CREDITOS.md).
+
+
 Todas las fotos se sirven desde `frontend/public/img/`, no desde URLs externas,
 así que cargan siempre incluso sin conexión a internet:
 

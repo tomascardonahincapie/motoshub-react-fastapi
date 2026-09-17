@@ -18,14 +18,17 @@ import AdminPanel from './pages/admin/AdminPanel';
 import EmployeePanel from './pages/EmployeePanel';
 import ClientPanel from './pages/ClientPanel';
 
+// Los tres paneles traen su propia barra lateral y su propia cabecera, asi
+// que en esas rutas no se pinta la cabecera del sitio publico.
+const RUTAS_DE_PANEL = ['/admin', '/empleado', '/cliente'];
+
 function AppShell() {
   const location = useLocation();
-  // El panel de administración trae su propia barra lateral y cabecera.
-  const esPanelAdmin = location.pathname.startsWith('/admin');
+  const esPanel = RUTAS_DE_PANEL.some((ruta) => location.pathname.startsWith(ruta));
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!esPanelAdmin && <Header />}
+      {!esPanel && <Header />}
 
       <main className="flex-1">
         <Routes>
@@ -65,12 +68,12 @@ function AppShell() {
         </Routes>
       </main>
 
-      {!esPanelAdmin && <Footer />}
+      {!esPanel && <Footer />}
 
-      {/* El carrito y el asistente acompañan al visitante por todo el sitio */}
+      {/* El carrito y el asistente acompañan al visitante por el sitio público */}
       <CarritoPanel />
-      {!esPanelAdmin && <WhatsAppButton />}
-      {!esPanelAdmin && <Chatbot />}
+      {!esPanel && <WhatsAppButton />}
+      {!esPanel && <Chatbot />}
     </div>
   );
 }

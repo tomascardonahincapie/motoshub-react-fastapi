@@ -1,0 +1,93 @@
+import { Link } from 'react-router-dom';
+import Logo from '../Logo';
+
+/**
+ * Barra lateral de navegación de los paneles.
+ *
+ * Es la misma para el administrador, el empleado y el cliente: solo cambian
+ * las secciones que recibe y el rótulo bajo la marca. Antes cada panel tenía
+ * su propia navegación y no se parecían entre sí.
+ *
+ * En escritorio queda fija mientras el contenido se desplaza; en móvil entra
+ * deslizándose sobre un velo oscuro.
+ */
+export default function BarraLateral({
+  secciones,
+  seccion,
+  setSeccion,
+  rotulo,
+  abiertaEnMovil,
+  cerrarEnMovil,
+}) {
+  return (
+    <>
+      {abiertaEnMovil && (
+        <div
+          className="fixed inset-0 z-40 bg-ink-950/70 backdrop-blur-sm lg:hidden"
+          onClick={cerrarEnMovil}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-line bg-ink-900 transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+          abiertaEnMovil ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Marca */}
+        <div className="flex items-center gap-2.5 border-b border-line px-5 py-5">
+          <Logo className="h-8 w-8" />
+          <div className="leading-tight">
+            <p className="font-display text-base font-bold uppercase tracking-[0.16em] text-mist-50">
+              Motos<span className="text-brand-500">Hub</span>
+            </p>
+            <p className="text-[0.6rem] uppercase tracking-[0.2em] text-mist-600">{rotulo}</p>
+          </div>
+        </div>
+
+        {/* Navegación */}
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          {secciones.map((item) => {
+            const activa = seccion === item.clave;
+            return (
+              <button
+                key={item.clave}
+                type="button"
+                onClick={() => {
+                  setSeccion(item.clave);
+                  cerrarEnMovil?.();
+                }}
+                aria-current={activa ? 'page' : undefined}
+                className={`relative flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-left text-[0.82rem] font-semibold transition-all ${
+                  activa
+                    ? 'bg-brand-500/12 text-brand-400'
+                    : 'text-mist-400 hover:bg-white/5 hover:text-mist-50'
+                }`}
+              >
+                {activa && (
+                  <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-500" />
+                )}
+                {item.icono}
+                {item.etiqueta}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Volver al sitio público */}
+        <div className="border-t border-line p-3">
+          <Link
+            to="/"
+            className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[0.82rem] font-semibold text-mist-400 transition-colors hover:bg-white/5 hover:text-mist-50"
+          >
+            <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+              <path d="M9 15.5H4.5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1H9M12.5 13l3-3-3-3M15.5 10H7"
+                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Ir al sitio
+          </Link>
+        </div>
+      </aside>
+    </>
+  );
+}

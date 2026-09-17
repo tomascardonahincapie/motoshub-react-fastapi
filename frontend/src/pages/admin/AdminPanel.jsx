@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import AdminSidebar, { SECCIONES } from '../../components/AdminSidebar';
-import MenuUsuario from '../../components/MenuUsuario';
-import Aviso from '../../components/Aviso';
+import MarcoPanel from '../../components/paneles/MarcoPanel';
+import { ICONOS } from '../../components/paneles/iconos';
 import Dashboard from '../../components/Dashboard';
 import TablaVentas from '../../components/paneles/TablaVentas';
 import TablaFacturas from '../../components/paneles/TablaFacturas';
@@ -13,29 +12,34 @@ import SeccionCatalogo from './SeccionCatalogo';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../utils/api';
 
-const DESCRIPCIONES = {
-  resumen: 'Indicadores y gráficos de toda la operación',
-  ventas: 'Registro e historial de ventas',
-  facturas: 'Consulta y descarga de facturas',
-  reportes: 'Reporte diario en PDF y Excel',
-  pqr: 'Peticiones, quejas y reclamos de los clientes',
-  usuarios: 'Crea, edita, activa o elimina cuentas',
-  productos: 'Administra el catálogo de la tienda',
-  servicios: 'Administra los servicios del taller',
-};
+const SECCIONES = [
+  { clave: 'resumen', etiqueta: 'Dashboard', icono: ICONOS.dashboard,
+    descripcion: 'Indicadores y gráficos de toda la operación' },
+  { clave: 'ventas', etiqueta: 'Ventas', icono: ICONOS.ventas,
+    descripcion: 'Registro e historial de ventas' },
+  { clave: 'facturas', etiqueta: 'Facturas', icono: ICONOS.facturas,
+    descripcion: 'Consulta y descarga de facturas' },
+  { clave: 'reportes', etiqueta: 'Reportes', icono: ICONOS.reportes,
+    descripcion: 'Reporte diario en PDF y Excel' },
+  { clave: 'pqr', etiqueta: 'PQR', icono: ICONOS.pqr,
+    descripcion: 'Peticiones, quejas y reclamos de los clientes' },
+  { clave: 'usuarios', etiqueta: 'Usuarios', icono: ICONOS.usuarios,
+    descripcion: 'Crea, edita, activa o elimina cuentas' },
+  { clave: 'productos', etiqueta: 'Productos', icono: ICONOS.productos,
+    descripcion: 'Administra el catálogo de la tienda' },
+  { clave: 'servicios', etiqueta: 'Servicios', icono: ICONOS.servicios,
+    descripcion: 'Administra los servicios del taller' },
+];
 
 export default function AdminPanel() {
-  const { usuario, token } = useAuth();
+  const { token } = useAuth();
 
   const [seccion, setSeccion] = useState('resumen');
-  const [menuMovil, setMenuMovil] = useState(false);
-
   const [usuarios, setUsuarios] = useState([]);
   const [productos, setProductos] = useState([]);
   const [servicios, setServicios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [nuevaVenta, setNuevaVenta] = useState(false);
-
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
 
@@ -72,7 +76,6 @@ export default function AdminPanel() {
 
   useEffect(() => { cargarTodo(); }, [cargarTodo]);
 
-  // Opciones de los filtros de los Dashboards y del historial.
   const articulos = useMemo(() => [
     ...productos.map((p) => ({ valor: `producto-${p.id_producto}`, etiqueta: p.nombre })),
     ...servicios.map((s) => ({ valor: `servicio-${s.id_servicio}`, etiqueta: `${s.nombre} (servicio)` })),
@@ -88,140 +91,72 @@ export default function AdminPanel() {
     [clientes],
   );
 
-  const seccionActual = SECCIONES.find((s) => s.clave === seccion);
+  const botonVenta = ['resumen', 'ventas', 'facturas'].includes(seccion) ? (
+    <button
+      type="button"
+      onClick={() => setNuevaVenta(true)}
+      className="btn btn-primario hidden h-9 w-auto !py-0 !text-[0.68rem] sm:inline-flex"
+    >
+      Registrar venta
+    </button>
+  ) : null;
+
+  const esqueleto = <div className="esqueleto h-96 w-full" />;
 
   return (
-    <div className="flex min-h-screen bg-ink-950">
-      <AdminSidebar
-        seccion={seccion}
-        setSeccion={setSeccion}
-        abiertaEnMovil={menuMovil}
-        cerrarEnMovil={() => setMenuMovil(false)}
-      />
+    <MarcoPanel
+      secciones={SECCIONES}
+      seccion={seccion}
+      setSeccion={setSeccion}
+      rotulo="Administración"
+      mensaje={mensaje}
+      error={error}
+      onCerrarMensaje={() => setMensaje('')}
+      onCerrarError={() => setError('')}
+      onRecargar={cargarTodo}
+      cargando={cargando}
+      acciones={botonVenta}
+    >
+      {seccion === 'resumen' && (
+        <Dashboard
+          token={token}
+          rol="Administrador"
+          articulos={articulos}
+          clientes={opcionesClientes}
+        />
+      )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Cabecera */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-ink-950/85 px-4 py-3.5 backdrop-blur-xl sm:px-6">
-          <button
-            type="button"
-            onClick={() => setMenuMovil(true)}
-            aria-label="Abrir menú"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-mist-300 transition-colors hover:border-line-strong lg:hidden"
-          >
-            <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
-              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
+      {seccion === 'ventas' && (
+        <TablaVentas token={token} puedeGestionar articulos={articulos} alRegistrar={cargarTodo} />
+      )}
 
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-lg font-semibold text-mist-50">
-              {seccionActual?.etiqueta}
-            </h1>
-            <p className="truncate text-xs text-mist-500">{DESCRIPCIONES[seccion]}</p>
-          </div>
+      {seccion === 'facturas' && <TablaFacturas token={token} puedeGestionar />}
 
-          {['resumen', 'ventas', 'facturas'].includes(seccion) && (
-            <button
-              type="button"
-              onClick={() => setNuevaVenta(true)}
-              className="btn btn-primario hidden h-9 w-auto !py-0 !text-[0.68rem] sm:inline-flex"
-            >
-              Registrar venta
-            </button>
-          )}
+      {seccion === 'reportes' && <PanelReportes token={token} />}
 
-          <button
-            type="button"
-            onClick={cargarTodo}
-            disabled={cargando}
-            aria-label="Recargar datos"
-            title="Recargar datos"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-mist-400 transition-colors hover:border-line-strong hover:text-mist-50 disabled:opacity-40"
-          >
-            <svg viewBox="0 0 20 20" fill="none" className={`h-4 w-4 ${cargando ? 'animate-spin' : ''}`}>
-              <path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              <path d="M16.5 3v3.5H13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+      {seccion === 'pqr' && (
+        <PanelPqr token={token} puedeGestionar avisar={avisar} alFallar={alFallar} />
+      )}
 
-          <MenuUsuario />
-        </header>
+      {seccion === 'usuarios' && (cargando ? esqueleto : (
+        <SeccionUsuarios
+          usuarios={usuarios} recargar={cargarTodo} avisar={avisar} alFallar={alFallar}
+        />
+      ))}
 
-        {/* Contenido */}
-        <main className="flex-1 p-4 sm:p-6">
-          <div className="mx-auto max-w-7xl">
-            <Aviso tipo="exito" onCerrar={() => setMensaje('')}>{mensaje}</Aviso>
-            <Aviso tipo="error" onCerrar={() => setError('')}>{error}</Aviso>
+      {seccion === 'productos' && (cargando ? esqueleto : (
+        <SeccionCatalogo
+          tipo="producto" items={productos} recargar={cargarTodo}
+          avisar={avisar} alFallar={alFallar}
+        />
+      ))}
 
-            <div key={seccion} className="animate-subir">
-              {seccion === 'resumen' && (
-                <Dashboard
-                  token={token}
-                  rol="Administrador"
-                  articulos={articulos}
-                  clientes={opcionesClientes}
-                />
-              )}
-
-              {seccion === 'ventas' && (
-                <TablaVentas
-                  token={token}
-                  puedeGestionar
-                  articulos={articulos}
-                  alRegistrar={cargarTodo}
-                />
-              )}
-
-              {seccion === 'facturas' && <TablaFacturas token={token} puedeGestionar />}
-
-              {seccion === 'reportes' && <PanelReportes token={token} />}
-
-              {seccion === 'pqr' && (
-                <PanelPqr token={token} puedeGestionar avisar={avisar} alFallar={alFallar} />
-              )}
-
-              {seccion === 'usuarios' && (
-                cargando ? <div className="esqueleto h-96 w-full" /> : (
-                  <SeccionUsuarios
-                    usuarios={usuarios}
-                    recargar={cargarTodo}
-                    avisar={avisar}
-                    alFallar={alFallar}
-                  />
-                )
-              )}
-
-              {seccion === 'productos' && (
-                cargando ? <div className="esqueleto h-96 w-full" /> : (
-                  <SeccionCatalogo
-                    tipo="producto"
-                    items={productos}
-                    recargar={cargarTodo}
-                    avisar={avisar}
-                    alFallar={alFallar}
-                  />
-                )
-              )}
-
-              {seccion === 'servicios' && (
-                cargando ? <div className="esqueleto h-96 w-full" /> : (
-                  <SeccionCatalogo
-                    tipo="servicio"
-                    items={servicios}
-                    recargar={cargarTodo}
-                    avisar={avisar}
-                    alFallar={alFallar}
-                  />
-                )
-              )}
-            </div>
-          </div>
-        </main>
-
-        <footer className="border-t border-line px-6 py-3 text-center text-xs text-mist-600">
-          Sesión de {usuario?.nombres} {usuario?.apellidos} · MotosHub · Ficha 3406211
-        </footer>
-      </div>
+      {seccion === 'servicios' && (cargando ? esqueleto : (
+        <SeccionCatalogo
+          tipo="servicio" items={servicios} recargar={cargarTodo}
+          avisar={avisar} alFallar={alFallar}
+        />
+      ))}
 
       <FormularioVenta
         abierto={nuevaVenta}
@@ -232,6 +167,6 @@ export default function AdminPanel() {
         servicios={servicios}
         alGuardar={(texto) => { avisar(texto); cargarTodo(); }}
       />
-    </div>
+    </MarcoPanel>
   );
 }

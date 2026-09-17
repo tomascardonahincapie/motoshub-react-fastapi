@@ -2,7 +2,7 @@
 
 Ficha 3406211 · Instructor: Jhan Hader Muñoz
 
-Las 33 capturas de `capturas/` se tomaron del proyecto **en ejecución** contra
+Las 34 capturas de `capturas/` se tomaron del proyecto **en ejecución** contra
 la base de datos MySQL real. Las de terminal, SQL y código muestran la salida
 verdadera de los comandos y el contenido de los archivos del proyecto.
 
@@ -29,6 +29,7 @@ verdadera de los comandos y el contenido de los archivos del proyecto.
 | `ev13_consulta_facturas.png` | Consulta de facturas con búsqueda y filtros |
 | `ev14_factura_pdf.png` | Factura de venta descargada en PDF |
 | `ev28_carrito_compra.png` | Carrito de compras del sitio público |
+| `ev34_catalogo.png` | Catálogo con las fotos corregidas |
 
 ### Reportes
 
@@ -100,7 +101,7 @@ carpetas).
 
 | # | Requerimiento | Evidencia |
 |---|---|---|
-| 1 | Módulo de ventas | `ev06`, `ev07`, `ev28` |
+| 1 | Módulo de ventas | `ev06`, `ev07`, `ev28`, `ev34` |
 | 2 | Registro de productos y servicios vendidos | `ev02`, `ev09` |
 | 3 | Historial de ventas | `ev08`, `ev22` |
 | 4 | Reporte diario de ventas | `ev10` |
