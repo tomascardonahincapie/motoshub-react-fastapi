@@ -5,6 +5,7 @@ import BarrasHorizontales from './graficos/BarrasHorizontales';
 import TarjetaIndicador from './graficos/TarjetaIndicador';
 import Aviso from './Aviso';
 import { api } from '../utils/api';
+import { usePeticionVigente } from '../utils/peticionVigente';
 import { formatearPrecio } from '../config';
 
 const AGRUPACIONES = [
@@ -163,6 +164,7 @@ export default function Dashboard({ token, rol, articulos = [], clientes = [] })
     cliente_id: '',
   });
 
+  const vigente = usePeticionVigente();
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -186,16 +188,19 @@ export default function Dashboard({ token, rol, articulos = [], clientes = [] })
   }, [filtros]);
 
   const cargar = useCallback(async () => {
+    const esVigente = vigente();
     setCargando(true);
     try {
-      setDatos(await api.getDashboardVentas(consulta, token));
+      const datos = await api.getDashboardVentas(consulta, token);
+      if (!esVigente()) return;
+      setDatos(datos);
       setError('');
     } catch (err) {
-      setError(err.message);
+      if (esVigente()) setError(err.message);
     } finally {
-      setCargando(false);
+      if (esVigente()) setCargando(false);
     }
-  }, [consulta, token]);
+  }, [consulta, token, vigente]);
 
   useEffect(() => { cargar(); }, [cargar]);
 

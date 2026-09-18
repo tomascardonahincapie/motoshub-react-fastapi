@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Aviso from '../Aviso';
 import { EtiquetaVenta, textoMetodoPago } from './Etiquetas';
 import { api } from '../../utils/api';
+import { usePeticionVigente } from '../../utils/peticionVigente';
 import { formatearFecha, formatearPrecio, hoyISO } from '../../config';
 
 function Cifra({ etiqueta, valor, destacada = false }) {
@@ -22,6 +23,7 @@ function Cifra({ etiqueta, valor, destacada = false }) {
  * la misma consulta al Backend: no hay dos cálculos que puedan discrepar.
  */
 export default function PanelReportes({ token }) {
+  const vigente = usePeticionVigente();
   const [fecha, setFecha] = useState(hoyISO());
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -30,14 +32,17 @@ export default function PanelReportes({ token }) {
   const [aviso, setAviso] = useState('');
 
   const cargar = useCallback(async () => {
+    const esVigente = vigente();
     setCargando(true);
     try {
-      setReporte(await api.getReporteDiario(fecha, token));
+      const datos = await api.getReporteDiario(fecha, token);
+      if (!esVigente()) return;
+      setReporte(datos);
       setError('');
     } catch (err) {
-      setError(err.message);
+      if (esVigente()) setError(err.message);
     } finally {
-      setCargando(false);
+      if (esVigente()) setCargando(false);
     }
   }, [fecha, token]);
 

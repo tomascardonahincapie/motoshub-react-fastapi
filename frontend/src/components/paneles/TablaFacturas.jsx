@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Aviso from '../Aviso';
 import { EtiquetaFactura } from './Etiquetas';
 import { api } from '../../utils/api';
+import { usePeticionVigente } from '../../utils/peticionVigente';
 import { formatearFecha, formatearPrecio } from '../../config';
 
 const ESTADOS = [
@@ -20,6 +21,7 @@ const VACIOS = { desde: '', hasta: '', estado: '', busqueda: '' };
  * roles: el cliente recibe del Backend solo sus propias facturas.
  */
 export default function TablaFacturas({ token, puedeGestionar = false, titulo = 'Facturas emitidas' }) {
+  const vigente = usePeticionVigente();
   const [filtros, setFiltros] = useState(VACIOS);
   const [facturas, setFacturas] = useState([]);
   const [totalFacturado, setTotalFacturado] = useState(0);
@@ -28,16 +30,18 @@ export default function TablaFacturas({ token, puedeGestionar = false, titulo = 
   const [descargando, setDescargando] = useState(null);
 
   const cargar = useCallback(async () => {
+    const esVigente = vigente();
     setCargando(true);
     try {
       const datos = await api.getFacturas(filtros, token);
+      if (!esVigente()) return;
       setFacturas(datos.facturas);
       setTotalFacturado(datos.total_facturado);
       setError('');
     } catch (err) {
-      setError(err.message);
+      if (esVigente()) setError(err.message);
     } finally {
-      setCargando(false);
+      if (esVigente()) setCargando(false);
     }
   }, [filtros, token]);
 

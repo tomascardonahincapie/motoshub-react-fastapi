@@ -3,6 +3,7 @@ import Modal from '../Modal';
 import Aviso from '../Aviso';
 import { EtiquetaVenta, textoMetodoPago } from './Etiquetas';
 import { api } from '../../utils/api';
+import { usePeticionVigente } from '../../utils/peticionVigente';
 import { formatearFecha, formatearPrecio } from '../../config';
 
 const ESTADOS = [
@@ -155,6 +156,7 @@ export default function TablaVentas({
   descripcion = 'Filtra por fecha, estado, forma de pago o artículo',
   alRegistrar,
 }) {
+  const vigente = usePeticionVigente();
   const [filtros, setFiltros] = useState(FILTROS_VACIOS);
   const [ventas, setVentas] = useState([]);
   const [resumen, setResumen] = useState(null);
@@ -163,6 +165,7 @@ export default function TablaVentas({
   const [detalle, setDetalle] = useState(null);
 
   const cargar = useCallback(async () => {
+    const esVigente = vigente();
     setCargando(true);
     try {
       const [tipo, id] = filtros.articulo ? filtros.articulo.split('-') : [];
@@ -178,13 +181,14 @@ export default function TablaVentas({
         },
         token,
       );
+      if (!esVigente()) return;
       setVentas(datos.ventas);
       setResumen(datos.resumen);
       setError('');
     } catch (err) {
-      setError(err.message);
+      if (esVigente()) setError(err.message);
     } finally {
-      setCargando(false);
+      if (esVigente()) setCargando(false);
     }
   }, [filtros, token]);
 

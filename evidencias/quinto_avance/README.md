@@ -2,9 +2,23 @@
 
 Ficha 3406211 · Instructor: Jhan Hader Muñoz
 
-Las 34 capturas de `capturas/` se tomaron del proyecto **en ejecución** contra
+Las 37 capturas de `capturas/` se tomaron del proyecto **en ejecución** contra
 la base de datos MySQL real. Las de terminal, SQL y código muestran la salida
 verdadera de los comandos y el contenido de los archivos del proyecto.
+
+## Lista de chequeo
+
+[`Lista_Chequeo_Quinto_Avance_DILIGENCIADA.xlsx`](Lista_Chequeo_Quinto_Avance_DILIGENCIADA.xlsx)
+lleva los 25 requerimientos con su estado, la captura incrustada y una nota de
+entrega en cada uno.
+
+**23 de 25 cumplidos (92 %).** Los dos que faltan dependen de algo externo al
+código:
+
+| Requerimiento | Estado | Qué falta |
+|---|---|---|
+| REQ-18 · Chatbot con IA | En Proceso | Cargar una API Key en `IA_API_KEY`. La integración está construida y probada con el proveedor simulado; sin clave el chatbot responde con su motor de reglas. |
+| REQ-20 · Despliegue | En Proceso | Ejecutar el despliegue y publicar la URL. La configuración está lista y ensayada en local; hace falta crear las cuentas. Ver [`DESPLIEGUE.md`](../../DESPLIEGUE.md). |
 
 ## Índice
 
@@ -30,6 +44,7 @@ verdadera de los comandos y el contenido de los archivos del proyecto.
 | `ev14_factura_pdf.png` | Factura de venta descargada en PDF |
 | `ev28_carrito_compra.png` | Carrito de compras del sitio público |
 | `ev34_catalogo.png` | Catálogo con las fotos corregidas |
+| `ev36_componentes_react.png` | Componentes reutilizables de React |
 
 ### Reportes
 
@@ -50,6 +65,7 @@ verdadera de los comandos y el contenido de los archivos del proyecto.
 | `ev19_dashboard_empleado.png` | Dashboard del empleado |
 | `ev20_dashboard_cliente.png` | Dashboard del cliente |
 | `ev21_dashboard_por_roles.png` | El recorte por rol lo decide el Backend |
+| `ev35_filtros_dashboard.png` | Filtros del Dashboard aplicados |
 | `ev22_compras_del_cliente.png` | El cliente consulta sus propias compras |
 | `ev23_facturas_del_cliente.png` | El cliente descarga sus propias facturas |
 
@@ -67,6 +83,7 @@ verdadera de los comandos y el contenido de los archivos del proyecto.
 | Archivo | Evidencia |
 |---|---|
 | `ev29_variables_entorno.png` | Variables de entorno sin exponer la API Key |
+| `ev37_seguridad_integral.png` | JWT, roles, hashing y variables de entorno |
 | `ev30_pruebas_automaticas.png` | 118 pruebas automáticas en verde |
 | `ev31_pruebas_endpoints.png` | Pruebas de los endpoints: ventas y facturación |
 | `ev32_pruebas_endpoints_2.png` | Pruebas de reportes, PQR, Dashboards y chatbot |

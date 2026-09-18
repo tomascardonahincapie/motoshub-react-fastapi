@@ -3,6 +3,7 @@ import Modal from '../Modal';
 import Aviso from '../Aviso';
 import { EtiquetaPqr, textoTipoPqr } from './Etiquetas';
 import { api } from '../../utils/api';
+import { usePeticionVigente } from '../../utils/peticionVigente';
 import { formatearFecha } from '../../config';
 
 const TIPOS = [
@@ -53,6 +54,7 @@ function Contadores({ resumen, filtro, setFiltro }) {
 }
 
 function FormularioRadicar({ abierto, onCerrar, token, alGuardar }) {
+  const vigente = usePeticionVigente();
   const [datos, setDatos] = useState({ tipo: 'peticion', asunto: '', descripcion: '' });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -234,16 +236,18 @@ export default function PanelPqr({ token, puedeGestionar = false, avisar, alFall
   const [error, setError] = useState('');
 
   const cargar = useCallback(async () => {
+    const esVigente = vigente();
     setCargando(true);
     try {
       const datos = await api.getPqr({ estado: filtro, busqueda }, token);
+      if (!esVigente()) return;
       setRegistros(datos.pqr);
       setResumen(datos.resumen);
       setError('');
     } catch (err) {
-      setError(err.message);
+      if (esVigente()) setError(err.message);
     } finally {
-      setCargando(false);
+      if (esVigente()) setCargando(false);
     }
   }, [filtro, busqueda, token]);
 
