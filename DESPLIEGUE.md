@@ -68,6 +68,38 @@ con hacer `git push` de los últimos cambios.
    mysql://root:CLAVE@monorail.proxy.rlwy.net:33060/railway
    ```
 
+### Si la base va en Aiven
+
+[aiven.io](https://aiven.io) tiene plan gratuito de **MySQL**, que es raro de
+encontrar: la mayoría de plataformas solo regalan PostgreSQL. Sirve de sobra
+para este proyecto y es la pareja natural de un Backend en Render, que no trae
+base de datos propia.
+
+1. **Create service** → **MySQL** → plan **Free**.
+2. Espera a que el estado pase a *Running* (tarda un par de minutos).
+3. En **Overview**, copia el **Service URI**. Viene así:
+
+   ```
+   mysql://avnadmin:CLAVE@mysql-xxxx-motoshub.a.aivencloud.com:23456/defaultdb?ssl-mode=REQUIRED
+   ```
+
+Pégala tal cual en `DATABASE_URL`. El código le quita el `ssl-mode`, que es
+sintaxis del cliente de MySQL y PyMySQL no sabe recibir —pegada sin limpiar, el
+servicio ni siquiera arranca—. La conexión sigue yendo cifrada: cuando no se le
+indica nada, PyMySQL intenta TLS igualmente si el servidor lo ofrece, y Aiven
+siempre lo ofrece.
+
+Tres detalles propios de Aiven:
+
+- El usuario es `avnadmin`, la base de entrada se llama `defaultdb` y el puerto
+  no es el 3306. Si prefieres el nombre del proyecto, créala en la pestaña
+  **Databases** de la consola y cambia el final de la URI.
+- El plan gratuito **no hace copias de seguridad**. Para una entrega académica
+  da igual, pero no pongas ahí nada que duela perder.
+- Si quieres además *verificar* el certificado del servidor y no solo cifrar,
+  descarga el **CA Certificate** de la consola y añádelo a la URL:
+  `...?ssl_ca=/ruta/ca.pem`. Ese parámetro sí se respeta.
+
 ### Cargar las tablas
 
 Un solo archivo deja la base lista: `backend/database/schema.sql`. Crea las
@@ -258,8 +290,8 @@ Render sirve igual de bien para el Backend, y el repositorio trae un
 
 **Lo único que Render no puede darte es la base de datos.** Su catálogo de
 bases gestionadas es PostgreSQL, no MySQL. Así que el MySQL tiene que vivir en
-otra parte y llegar por `DATABASE_URL`: el de Railway sirve, y también los
-planes gratuitos de Aiven o Clever Cloud.
+otra parte y llegar por `DATABASE_URL`: el de Railway sirve, y el plan gratuito
+de Aiven también (ver [«Si la base va en Aiven»](#si-la-base-va-en-aiven)).
 
 Si prefieres crear los servicios a mano en vez de usar el Blueprint:
 

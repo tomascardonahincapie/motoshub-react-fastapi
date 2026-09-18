@@ -9,10 +9,37 @@ se escribe directamente en el codigo fuente ni se sube al repositorio.
 import json
 from decimal import Decimal
 from typing import Annotated
-from urllib.parse import quote_plus
+from urllib.parse import parse_qsl, quote_plus, urlencode
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+
+# Parametros que algunas plataformas cuelgan de la URL de conexion y que PyMySQL
+# no sabe recibir. Aiven, por ejemplo, entrega la suya terminada en
+# `?ssl-mode=REQUIRED`; pegada tal cual en el panel, SQLAlchemy se la pasa al
+# driver y el arranque muere con "unexpected keyword argument 'ssl-mode'".
+#
+# Quitarlos no deja la conexion en claro: cuando no se le indica nada, PyMySQL
+# intenta TLS igualmente siempre que el servidor lo ofrezca, que es justo lo que
+# ese parametro venia a pedir.
+PARAMETROS_QUE_EL_DRIVER_NO_ENTIENDE = frozenset({'ssl-mode', 'ssl_mode', 'sslmode'})
+
+
+def _sin_parametros_ajenos(url: str) -> str:
+    """Devuelve la URL sin los parametros que el driver rechazaria."""
+    if '?' not in url:
+        return url
+
+    base, consulta = url.split('?', 1)
+    utiles = [
+        (clave, valor)
+        for clave, valor in parse_qsl(consulta, keep_blank_values=True)
+        if clave.lower() not in PARAMETROS_QUE_EL_DRIVER_NO_ENTIENDE
+    ]
+    if not utiles:
+        return base
+    return base + '?' + urlencode(utiles, safe='/')
 
 
 class Configuracion(BaseSettings):
@@ -98,10 +125,12 @@ class Configuracion(BaseSettings):
         Railway y otras plataformas entregan la base como
         `mysql://usuario:clave@host:puerto/base`, sin indicar el driver.
         SQLAlchemy necesita saber cual usar, asi que se le antepone pymysql en
-        lugar de obligar a editar la variable a mano en el panel.
+        lugar de obligar a editar la variable a mano en el panel. Por lo mismo
+        se limpian los parametros que el driver no admite: la idea es que la
+        cadena que da la plataforma se pueda pegar tal cual.
         """
         if self.database_url:
-            url = self.database_url.strip()
+            url = _sin_parametros_ajenos(self.database_url.strip())
             if url.startswith('mysql://'):
                 url = url.replace('mysql://', 'mysql+pymysql://', 1)
             if url.startswith('mysql+pymysql://') and 'charset=' not in url:

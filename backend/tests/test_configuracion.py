@@ -52,3 +52,42 @@ def test_no_toca_una_url_que_ya_trae_driver():
     ajustes = Configuracion(_env_file=None, database_url=url)
 
     assert ajustes.url_base_datos == url
+
+
+AIVEN = 'mysql://avnadmin:clave@mysql-motoshub.a.aivencloud.com:23456/defaultdb'
+
+
+def test_la_url_de_aiven_se_puede_pegar_tal_cual():
+    """Aiven la entrega con ?ssl-mode=REQUIRED, que PyMySQL no sabe recibir.
+
+    Pegada sin limpiar, SQLAlchemy se la pasa al driver y el arranque muere con
+    "unexpected keyword argument 'ssl-mode'". No es un fallo de una peticion:
+    es un servicio que no levanta.
+    """
+    ajustes = Configuracion(_env_file=None, database_url=f'{AIVEN}?ssl-mode=REQUIRED')
+
+    url = ajustes.url_base_datos
+
+    assert 'ssl-mode' not in url
+    assert url == f'mysql+pymysql://avnadmin:clave@mysql-motoshub.a.aivencloud.com:23456/defaultdb?charset=utf8mb4'
+
+
+def test_la_ruta_del_certificado_si_se_respeta():
+    """ssl_ca sirve para verificar el certificado del servidor: no se toca."""
+    ajustes = Configuracion(_env_file=None, database_url=f'{AIVEN}?ssl_ca=/etc/aiven/ca.pem')
+
+    url = ajustes.url_base_datos
+
+    assert 'ssl_ca=/etc/aiven/ca.pem' in url
+    assert 'charset=utf8mb4' in url
+
+
+def test_conviven_el_parametro_que_sobra_y_el_que_sirve():
+    ajustes = Configuracion(
+        _env_file=None, database_url=f'{AIVEN}?ssl-mode=REQUIRED&ssl_ca=/etc/aiven/ca.pem',
+    )
+
+    url = ajustes.url_base_datos
+
+    assert 'ssl-mode' not in url
+    assert 'ssl_ca=/etc/aiven/ca.pem' in url
