@@ -36,11 +36,6 @@
       "type": "string"
     },
     {
-      "key": "id_servicio",
-      "value": "",
-      "type": "string"
-    },
-    {
       "key": "conversacion_id",
       "value": "",
       "type": "string"
@@ -79,9 +74,113 @@
       "key": "venta_sin_factura",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "producto_venta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "servicio_venta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "stock_venta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "id_servicio",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "correo_nuevo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "documento_nuevo",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
+    {
+      "name": "00 - Preparacion",
+      "description": "Resuelve contra la base los identificadores que usan las demas carpetas. Ejecutar antes que el resto.",
+      "item": [
+        {
+          "name": "Tomar el producto con mas existencias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const productos = pm.response.json().productos;",
+                  "const activos = productos.filter((p) => p.estado === \"activo\");",
+                  "",
+                  "// Se elige el de mayor stock: la coleccion encadena varias ventas y",
+                  "// con el primero que aparezca se quedaria sin unidades a mitad.",
+                  "const elegido = activos.reduce((mejor, p) => (p.stock > mejor.stock ? p : mejor), activos[0]);",
+                  "",
+                  "pm.collectionVariables.set(\"producto_venta\", elegido.id_producto);",
+                  "pm.collectionVariables.set(\"stock_venta\", elegido.stock);",
+                  "pm.test(\"Hay catalogo\", () => pm.expect(activos.length).to.be.above(0));",
+                  "pm.test(\"El articulo elegido tiene unidades\", () => pm.expect(elegido.stock).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/productos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tomar un servicio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const servicios = pm.response.json().servicios;",
+                  "pm.collectionVariables.set(\"servicio_venta\", servicios[0].id_servicio);",
+                  "pm.test(\"Hay servicios\", () => pm.expect(servicios.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/servicios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "servicios"
+              ]
+            }
+          }
+        }
+      ]
+    },
     {
       "name": "01 - Sistema",
       "item": [
@@ -604,6 +703,19 @@
           "name": "Crear empleado (POST)",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Correo y documento unicos, para que la coleccion se pueda",
+                  "// ejecutar las veces que haga falta sin chocar consigo misma.",
+                  "const sufijo = Date.now().toString().slice(-7);",
+                  "pm.collectionVariables.set(\"correo_nuevo\", `empleado.${sufijo}@jhmtech.com`);",
+                  "pm.collectionVariables.set(\"documento_nuevo\", `19${sufijo}`);"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
@@ -627,7 +739,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Martinez\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1088776655\",\n  \"direccion\": \"Avenida 30 #15-40\",\n  \"telefono\": \"3112223344\",\n  \"email\": \"ana.martinez@jhmtech.com\",\n  \"password\": \"Empleada123\",\n  \"rol_id\": 2\n}"
+              "raw": "{\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Martinez\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"{{documento_nuevo}}\",\n  \"direccion\": \"Avenida 30 #15-40\",\n  \"telefono\": \"3112223344\",\n  \"email\": \"{{correo_nuevo}}\",\n  \"password\": \"Empleada123\",\n  \"rol_id\": 2\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/usuarios",
@@ -1235,7 +1347,7 @@
             "description": "Los precios se toman del catalogo, no de esta peticion. Descuenta el stock y emite la factura.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"metodo_pago\": \"efectivo\",\n  \"generar_factura\": true,\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 7,\n      \"cantidad\": 1\n    },\n    {\n      \"tipo_item\": \"servicio\",\n      \"id_item\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"metodo_pago\": \"efectivo\",\n  \"generar_factura\": true,\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": {{producto_venta}},\n      \"cantidad\": 1\n    },\n    {\n      \"tipo_item\": \"servicio\",\n      \"id_item\": {{servicio_venta}},\n      \"cantidad\": 1\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1287,7 +1399,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cliente_id\": 4,\n  \"metodo_pago\": \"tarjeta\",\n  \"observaciones\": \"Venta en tienda\",\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 10,\n      \"cantidad\": 2\n    }\n  ]\n}",
+              "raw": "{\n  \"cliente_id\": 4,\n  \"metodo_pago\": \"tarjeta\",\n  \"observaciones\": \"Venta en tienda\",\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": {{producto_venta}},\n      \"cantidad\": 2\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1334,7 +1446,7 @@
             "description": "El Backend rechaza la venta antes de tocar el inventario.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 7,\n      \"cantidad\": 9999\n    }\n  ]\n}",
+              "raw": "{\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": {{producto_venta}},\n      \"cantidad\": 999\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1376,7 +1488,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 7,\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": {{producto_venta}},\n      \"cantidad\": 1\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1491,7 +1603,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/ventas?producto_id=7",
+              "raw": "{{base_url}}/api/ventas?producto_id={{producto_venta}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1502,7 +1614,7 @@
               "query": [
                 {
                   "key": "producto_id",
-                  "value": "7"
+                  "value": "{{producto_venta}}"
                 }
               ]
             }
@@ -1753,7 +1865,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"cliente_id\": 4,\n  \"metodo_pago\": \"transferencia\",\n  \"generar_factura\": false,\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": 12,\n      \"cantidad\": 3\n    }\n  ]\n}",
+              "raw": "{\n  \"cliente_id\": 4,\n  \"metodo_pago\": \"transferencia\",\n  \"generar_factura\": false,\n  \"items\": [\n    {\n      \"tipo_item\": \"producto\",\n      \"id_item\": {{producto_venta}},\n      \"cantidad\": 3\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2920,7 +3032,7 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/estadisticas/ventas?producto_id=7&estado=pagada",
+              "raw": "{{base_url}}/api/estadisticas/ventas?producto_id={{producto_venta}}&estado=pagada",
               "host": [
                 "{{base_url}}"
               ],
@@ -2932,7 +3044,7 @@
               "query": [
                 {
                   "key": "producto_id",
-                  "value": "7"
+                  "value": "{{producto_venta}}"
                 },
                 {
                   "key": "estado",

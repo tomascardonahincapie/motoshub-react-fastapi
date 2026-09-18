@@ -1,8 +1,12 @@
-"""Modelo ORM de las facturas de venta.
+"""Modelos ORM de las facturas de venta y de su detalle.
 
 Cada factura nace de una venta registrada y guarda una copia de los datos del
 cliente tal como estaban al emitirla. Una factura es un documento: no cambia
 porque el cliente actualice despues su direccion o su telefono.
+
+Por eso la factura tiene su propio detalle en lugar de leer el de la venta:
+si manana se corrige una linea de la venta, la factura ya emitida debe seguir
+diciendo exactamente lo que se cobro.
 """
 
 from datetime import datetime
@@ -58,3 +62,30 @@ class Factura(Base):
     )
 
     venta: Mapped['Venta'] = relationship(back_populates='factura', lazy='joined')  # noqa: F821
+    detalles: Mapped[list['DetalleFactura']] = relationship(
+        back_populates='factura',
+        cascade='all, delete-orphan',
+        lazy='selectin',
+        order_by='DetalleFactura.id_detalle_factura',
+    )
+
+
+class DetalleFactura(Base):
+    """Una linea de la factura, congelada en el momento de emitirla."""
+
+    __tablename__ = 'detalle_facturas'
+
+    id_detalle_factura: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    factura_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey('facturas.id_factura', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
+
+    tipo_item: Mapped[str] = mapped_column(String(20), nullable=False)
+    nombre_item: Mapped[str] = mapped_column(String(100), nullable=False)
+    cantidad: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    precio_unitario: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    descuento: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+
+    factura: Mapped[Factura] = relationship(back_populates='detalles')

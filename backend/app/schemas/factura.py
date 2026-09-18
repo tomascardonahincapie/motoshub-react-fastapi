@@ -6,9 +6,25 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.venta import DetalleVentaRespuesta
-
 EstadoFactura = Literal['emitida', 'pagada', 'anulada']
+
+
+class DetalleFacturaRespuesta(BaseModel):
+    """Una linea tal como quedo facturada.
+
+    Tiene su propio esquema y no reutiliza el de la venta porque son tablas
+    distintas: la clave de una es id_detalle y la de la otra id_detalle_factura.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id_detalle_factura: int
+    tipo_item: str
+    nombre_item: str
+    cantidad: int
+    precio_unitario: Decimal
+    descuento: Decimal
+    subtotal: Decimal
 
 
 class FacturaCrear(BaseModel):
@@ -49,8 +65,8 @@ class FacturaRespuesta(BaseModel):
     estado: str
     observaciones: str | None = None
     fecha_emision: datetime
-    # El detalle viaja aparte porque pertenece a la venta, no a la factura.
-    detalles: list[DetalleVentaRespuesta] = []
+    # Copia de las lineas tal como se facturaron.
+    detalles: list[DetalleFacturaRespuesta] = []
 
 
 class RespuestaListaFacturas(BaseModel):

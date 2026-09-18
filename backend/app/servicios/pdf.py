@@ -301,7 +301,8 @@ def factura(factura_bd, negocio: dict) -> bytes:
 
     # --- Detalle -----------------------------------------------------------
     filas = [['#', 'Descripción', 'Tipo', 'Cant.', 'Precio unitario', 'Descuento', 'Subtotal']]
-    detalles = venta.detalles if venta else []
+    # Las lineas salen de la factura, que las congelo al emitirse.
+    detalles = list(factura_bd.detalles)
 
     for posicion, detalle in enumerate(detalles, start=1):
         filas.append([

@@ -2,7 +2,7 @@
 
 Ficha 3406211 · Instructor: Jhan Hader Muñoz
 
-Las 37 capturas de `capturas/` se tomaron del proyecto **en ejecución** contra
+Las 38 capturas de `capturas/` se tomaron del proyecto **en ejecución** contra
 la base de datos MySQL real. Las de terminal, SQL y código muestran la salida
 verdadera de los comandos y el contenido de los archivos del proyecto.
 
@@ -26,8 +26,8 @@ código:
 
 | Archivo | Evidencia |
 |---|---|
-| `ev01_base_datos.png` | Base de datos ampliada a 13 tablas |
-| `ev02_tablas_nuevas.png` | Estructura de `detalle_ventas`, `facturas` y `pqr` |
+| `ev01_base_datos.png` | Base de datos ampliada a 14 tablas |
+| `ev02_tablas_nuevas.png` | Estructura de `detalle_ventas`, `facturas`, `detalle_facturas` y `pqr` |
 | `ev03_relaciones.png` | Claves foráneas entre las tablas nuevas |
 | `ev04_modelos_esquemas.png` | Modelo ORM frente a esquema Pydantic |
 | `ev05_endpoints_nuevos.png` | Endpoints nuevos documentados en Swagger |
@@ -84,10 +84,11 @@ código:
 |---|---|
 | `ev29_variables_entorno.png` | Variables de entorno sin exponer la API Key |
 | `ev37_seguridad_integral.png` | JWT, roles, hashing y variables de entorno |
-| `ev30_pruebas_automaticas.png` | 118 pruebas automáticas en verde |
+| `ev30_pruebas_automaticas.png` | 133 pruebas automáticas en verde |
 | `ev31_pruebas_endpoints.png` | Pruebas de los endpoints: ventas y facturación |
 | `ev32_pruebas_endpoints_2.png` | Pruebas de reportes, PQR, Dashboards y chatbot |
 | `ev33_despliegue.png` | Configuración de despliegue en producción |
+| `ev38_postman_newman.png` | La colección de Postman corrida entera: 97 comprobaciones, 0 fallos |
 
 ## Cómo reproducirlo
 
@@ -107,12 +108,17 @@ Y después:
 cd backend
 python scripts/datos_demo.py                # historial de demostración
 python scripts/verificar_quinto_avance.py   # recorrido completo de la API
-pytest -q                                   # 118 pruebas automáticas
+pytest -q                                   # 133 pruebas automáticas
 ```
 
 Las mismas peticiones están en la colección de Postman:
-`backend/postman/MotosHub_API.postman_collection.json` (84 peticiones en 12
-carpetas).
+`backend/postman/MotosHub_API.postman_collection.json` — 86 peticiones en 13
+carpetas, con 97 comprobaciones automáticas. Se puede correr entera sin abrir
+Postman, y se puede repetir las veces que haga falta porque no deja rastro:
+
+```bash
+npx newman run backend/postman/MotosHub_API.postman_collection.json
+```
 
 ## Cobertura de los requerimientos
 
@@ -138,6 +144,11 @@ carpetas).
 | 18 | Integración del chatbot con IA | `ev27` |
 | 19 | Gestión segura de la API Key | `ev29` |
 | 20 | Integración completa y despliegue | `ev33` y [`DESPLIEGUE.md`](../../DESPLIEGUE.md) |
+| 21 | Evolución de la base de datos SQL | `ev01`, `ev02`, `ev03` |
+| 22 | Modelos y esquemas de FastAPI | `ev04` |
+| 23 | Componentes reutilizables de React | `ev36` |
+| 24 | Seguridad integral de los endpoints | `ev37`, `ev29` |
+| 25 | Pruebas de endpoints con Postman | `ev38`, `ev31`, `ev32` |
 
 ## Pendiente
 

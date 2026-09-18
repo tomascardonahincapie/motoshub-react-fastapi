@@ -82,14 +82,14 @@ Con MySQL en ejecución (XAMPP, WAMP o servicio propio):
 mysql -u root -p < backend/database/schema.sql
 ```
 
-Crea la base `bd_jhm_tech_solutions` con las **13 tablas** del proyecto, más el
+Crea la base `bd_jhm_tech_solutions` con las **14 tablas** del proyecto, más el
 catálogo y los usuarios de prueba:
 
 | Del cuarto avance | Del quinto avance |
 |---|---|
 | `roles`, `permisos`, `roles_permisos` | `ventas`, `detalle_ventas` |
 | `usuarios`, `tokens_recuperacion` | `facturas`, `pqr` |
-| `productos`, `servicios` | `conversaciones`, `mensajes` |
+| `productos`, `servicios` | `detalle_facturas`, `conversaciones`, `mensajes` |
 
 > **Si ya tienes la base del cuarto avance con datos, no ejecutes
 > `schema.sql`**: borraría el catálogo. Usa la migración, que solo agrega lo
@@ -385,13 +385,14 @@ página y en la página de contacto.
   navegador y el endpoint de estado jamás la devuelve.
 - **Carrito de compras** en el sitio público, con confirmación que registra la
   venta real y entrega la factura.
-- **Colección de Postman** con 84 peticiones listas para ejecutar.
-- **118 pruebas automáticas** que recorren toda la API (`pytest`).
+- **Colección de Postman** con 86 peticiones y 97 comprobaciones que pasan
+  enteras, una y otra vez, sin dejar rastro en la base.
+- **133 pruebas automáticas** que recorren toda la API (`pytest`).
 - **Configuración de despliegue** para Railway y para plataformas con Docker.
 
 ## Verificación realizada
 
-- `pytest` → **118 pruebas en verde**: registro, login, JWT, roles, CRUD,
+- `pytest` → **133 pruebas en verde**: registro, login, JWT, roles, CRUD,
   validaciones, ventas, stock, facturación, reportes en PDF y Excel, PQR,
   Dashboards por rol y chatbot (con el proveedor de IA simulado).
 - Recorrido de la API contra **MySQL real**:

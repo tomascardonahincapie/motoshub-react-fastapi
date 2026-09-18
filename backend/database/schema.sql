@@ -5,7 +5,7 @@
 --
 -- Estructura: roles, permisos, roles_permisos, usuarios,
 --             productos, servicios, tokens_recuperacion,
---             ventas, detalle_ventas, facturas, pqr,
+--             ventas, detalle_ventas, facturas, detalle_facturas, pqr,
 --             conversaciones y mensajes.
 --
 -- Ejecutar con:
@@ -301,6 +301,26 @@ CREATE TABLE IF NOT EXISTS facturas (
     REFERENCES ventas(id_venta) ON DELETE CASCADE,
   CONSTRAINT fk_facturas_cliente FOREIGN KEY (cliente_id)
     REFERENCES usuarios(id_usuario) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================================
+-- Tabla: detalle_facturas
+-- Copia de las lineas en el momento de emitir. Junto con los
+-- datos del cliente y los totales que ya guarda la factura,
+-- hace que el documento no dependa de la venta.
+-- =========================================================
+CREATE TABLE IF NOT EXISTS detalle_facturas (
+  id_detalle_factura INT AUTO_INCREMENT PRIMARY KEY,
+  factura_id INT NOT NULL,
+  tipo_item VARCHAR(20) NOT NULL,
+  nombre_item VARCHAR(100) NOT NULL,
+  cantidad INT NOT NULL DEFAULT 1,
+  precio_unitario DECIMAL(12,2) NOT NULL DEFAULT 0,
+  descuento DECIMAL(12,2) NOT NULL DEFAULT 0,
+  subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
+  INDEX idx_detalle_factura (factura_id),
+  CONSTRAINT fk_detalle_facturas_factura FOREIGN KEY (factura_id)
+    REFERENCES facturas(id_factura) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================================

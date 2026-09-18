@@ -52,7 +52,7 @@ def buscar_o_fallar(sesion: Sesion, id_factura: int, usuario: Usuario) -> Factur
 
 
 def _con_detalle(factura: Factura) -> dict:
-    """Aplana la factura con el detalle de su venta, que es donde vive."""
+    """Aplana la factura junto con sus lineas."""
     datos = {
         campo: getattr(factura, campo)
         for campo in (
@@ -63,7 +63,8 @@ def _con_detalle(factura: Factura) -> dict:
         )
     }
     datos['numero_venta'] = factura.venta.numero_venta if factura.venta else None
-    datos['detalles'] = factura.venta.detalles if factura.venta else []
+    # El detalle sale de la propia factura, no de la venta: es lo que se cobro.
+    datos['detalles'] = factura.detalles
     return datos
 
 

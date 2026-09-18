@@ -11,7 +11,7 @@ from app.core.configuracion import configuracion
 from app.crud.consecutivos import siguiente_numero
 from app.crud.ventas import _limites_del_dia, _mover_stock, redondear
 from app.errores import ConflictoDeNegocio
-from app.models import Factura, Venta
+from app.models import DetalleFactura, Factura, Venta
 
 INTENTOS_NUMERACION = 4
 
@@ -49,6 +49,20 @@ def emitir(sesion: Session, venta: Venta, observaciones: str | None = None) -> F
             estado='pagada' if venta.estado == 'pagada' else 'emitida',
             observaciones=observaciones,
         )
+
+        # La factura se lleva su propia copia de las lineas. Si manana se
+        # corrige el detalle de la venta, lo ya facturado no cambia.
+        factura.detalles = [
+            DetalleFactura(
+                tipo_item=linea.tipo_item,
+                nombre_item=linea.nombre_item,
+                cantidad=linea.cantidad,
+                precio_unitario=linea.precio_unitario,
+                descuento=linea.descuento,
+                subtotal=linea.subtotal,
+            )
+            for linea in venta.detalles
+        ]
         sesion.add(factura)
 
         try:

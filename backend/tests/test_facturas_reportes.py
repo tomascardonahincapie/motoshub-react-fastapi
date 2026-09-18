@@ -180,3 +180,56 @@ def test_el_empleado_si_puede_generar_el_reporte(cliente_http, token_empleado):
     respuesta = cliente_http.get('/api/reportes/ventas-diarias', headers=cabecera(token_empleado))
 
     assert respuesta.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# La factura guarda su propio detalle
+# ---------------------------------------------------------------------------
+def test_la_factura_copia_las_lineas_al_emitirse(cliente_http, token_cliente, sesion_de_prueba):
+    from app.models import DetalleFactura
+
+    venta = vender(cliente_http, token_cliente)
+
+    lineas = sesion_de_prueba.query(DetalleFactura).filter_by(
+        factura_id=venta['id_factura'],
+    ).all()
+
+    assert len(lineas) == 1
+    assert lineas[0].nombre_item == 'Kawasaki Ninja 400'
+    assert float(lineas[0].subtotal) == 480000
+
+
+def test_corregir_la_venta_no_altera_la_factura_ya_emitida(cliente_http, token_cliente, sesion_de_prueba):
+    """Una factura es un documento: dice lo que se cobro, pase lo que pase."""
+    from app.models import DetalleVenta
+
+    venta = vender(cliente_http, token_cliente)
+
+    # Se retoca el detalle de la venta como si alguien corrigiera un error.
+    linea = sesion_de_prueba.query(DetalleVenta).filter_by(venta_id=venta['id_venta']).first()
+    linea.nombre_item = 'Otro artículo distinto'
+    linea.precio_unitario = 1
+    sesion_de_prueba.commit()
+
+    factura = cliente_http.get(
+        f"/api/facturas/{venta['id_factura']}", headers=cabecera(token_cliente),
+    ).json()['factura']
+
+    assert factura['detalles'][0]['nombre_item'] == 'Kawasaki Ninja 400'
+    assert float(factura['detalles'][0]['precio_unitario']) == 480000
+
+
+def test_el_pdf_de_la_factura_imprime_su_propio_detalle(cliente_http, token_cliente, sesion_de_prueba):
+    from app.models import DetalleVenta
+
+    venta = vender(cliente_http, token_cliente)
+    linea = sesion_de_prueba.query(DetalleVenta).filter_by(venta_id=venta['id_venta']).first()
+    linea.nombre_item = 'Artículo cambiado despues'
+    sesion_de_prueba.commit()
+
+    respuesta = cliente_http.get(
+        f"/api/facturas/{venta['id_factura']}/pdf", headers=cabecera(token_cliente),
+    )
+
+    assert respuesta.status_code == 200
+    assert respuesta.content.startswith(FIRMA_PDF)
