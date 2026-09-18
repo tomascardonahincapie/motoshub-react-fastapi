@@ -8,10 +8,11 @@ se escribe directamente en el codigo fuente ni se sube al repositorio.
 
 import json
 from decimal import Decimal
+from typing import Annotated
 from urllib.parse import quote_plus
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Configuracion(BaseSettings):
@@ -47,7 +48,11 @@ class Configuracion(BaseSettings):
     # URL publica del Frontend: se usa para armar el enlace de recuperacion
     url_frontend: str = 'http://localhost:5173'
 
-    origenes_permitidos: list[str] = [
+    # NoDecode evita que pydantic-settings intente leer la variable de entorno
+    # como JSON antes de tiempo. Sin el, ORIGENES_PERMITIDOS separado por comas
+    # -que es como se escribe comodamente en Railway- tumba el arranque con un
+    # error de parseo, sin llegar siquiera al validador de abajo.
+    origenes_permitidos: Annotated[list[str], NoDecode] = [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
     ]
@@ -148,10 +153,15 @@ class Configuracion(BaseSettings):
         """
         if not isinstance(valor, str):
             return valor
+
         texto = valor.strip()
         if texto.startswith('['):
             return json.loads(texto)
-        return [parte.strip() for parte in texto.split(',') if parte.strip()]
+
+        # Se admiten comas y saltos de linea como separadores, porque al pegar
+        # varias URL en el panel de la plataforma suelen quedar en lineas.
+        partes = texto.replace(chr(10), ',').split(',')
+        return [parte.strip() for parte in partes if parte.strip()]
 
 
 configuracion = Configuracion()

@@ -105,6 +105,13 @@ mysql --host=HOST --port=PUERTO --user=root --password=CLAVE railway < backend/d
    El código convierte `mysql://` en `mysql+pymysql://` por su cuenta, así que
    `DATABASE_URL` se pega tal cual llega.
 
+   `ORIGENES_PERMITIDOS` se escribe sin comillas ni corchetes. Una sola URL o
+   varias separadas por comas:
+
+   ```
+   https://motoshub.up.railway.app,https://motoshub.vercel.app
+   ```
+
 4. En **Settings** → **Networking** → **Generate Domain** para obtener la URL
    pública del Backend.
 
@@ -137,6 +144,25 @@ mysql --host=HOST --port=PUERTO --user=root --password=CLAVE railway < backend/d
 
 > `VITE_API_URL` se lee **al compilar**, no al arrancar. Si la cambias después,
 > hay que volver a desplegar el Frontend para que el cambio surta efecto.
+
+### Alternativa: el Frontend en Vercel
+
+Sale gratis de forma permanente y no consume el crédito de Railway, que
+conviene reservar para el Backend y la base de datos.
+
+1. En [vercel.com](https://vercel.com) → **Add New** → **Project** → importa el
+   repositorio.
+2. **Root Directory**: `frontend`. El resto lo detecta solo (Vite).
+3. En **Environment Variables**, añade `VITE_API_URL` con la URL del Backend
+   más `/api`.
+4. **Deploy**.
+
+El archivo `frontend/vercel.json` ya está en el repositorio: incluye la regla
+que devuelve `index.html` en cualquier ruta, sin la cual entrar directo a
+`/admin` daría 404.
+
+Después, en el Backend, pon el dominio de Vercel en `ORIGENES_PERMITIDOS` y en
+`URL_FRONTEND`.
 
 ---
 
