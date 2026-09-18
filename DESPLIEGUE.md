@@ -20,6 +20,7 @@ entorno.
 Los archivos de configuración ya están en el repositorio:
 
 - `backend/railway.json` y `frontend/railway.json` — builder y comando de arranque
+- `render.yaml` — los dos servicios de Render en un solo Blueprint
 - `backend/Procfile` y `frontend/Procfile` — lo mismo para plataformas tipo Heroku
 - `backend/Dockerfile` y `frontend/Dockerfile` — alternativa para plataformas con Docker
 - `frontend/servidor.js` — servidor estático del Frontend ya compilado
@@ -246,6 +247,54 @@ Comprueba el resultado en `https://TU-BACKEND.up.railway.app/api/chatbot/estado`
 | 404 al recargar `/admin` | El Frontend no se está sirviendo con `node servidor.js` |
 | El enlace de recuperación apunta a localhost | Falta `URL_FRONTEND` en el Backend |
 | El chatbot responde pero sin IA | Faltan `IA_PROVEEDOR` o `IA_API_KEY` |
+
+---
+
+## Desplegar en Render
+
+Render sirve igual de bien para el Backend, y el repositorio trae un
+`render.yaml` en la raíz que crea los dos servicios de una vez: en Render,
+**New → Blueprint**, eliges el repositorio y él lo lee solo.
+
+**Lo único que Render no puede darte es la base de datos.** Su catálogo de
+bases gestionadas es PostgreSQL, no MySQL. Así que el MySQL tiene que vivir en
+otra parte y llegar por `DATABASE_URL`: el de Railway sirve, y también los
+planes gratuitos de Aiven o Clever Cloud.
+
+Si prefieres crear los servicios a mano en vez de usar el Blueprint:
+
+| Campo | Backend | Frontend |
+|---|---|---|
+| Tipo | Web Service | Static Site |
+| Root Directory | `backend` | `frontend` |
+| Build Command | `pip install -r requirements.txt` | `npm ci && npm run build` |
+| Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` | — |
+| Publish Directory | — | `dist` |
+| Health Check Path | `/salud` | — |
+
+Las variables de entorno son exactamente las mismas del paso 3 y del paso 4.
+
+Dos detalles propios de Render:
+
+- **`runtime.txt` no le sirve**, esa es convención de Heroku. La versión de
+  Python se fija con la variable `PYTHON_VERSION` (el `render.yaml` ya la trae
+  en `3.12.7`) o con el archivo `backend/.python-version`.
+- En el **Static Site** hay que añadir una regla de reescritura de `/*` a
+  `/index.html`, o entrar directo a `/admin` daría 404. El `render.yaml` ya la
+  incluye; si creas el servicio a mano, va en **Redirects/Rewrites**.
+
+### El plan gratuito se duerme
+
+Un Web Service gratuito de Render se apaga tras unos 15 minutos sin visitas y
+tarda cerca de un minuto en volver. Para uso propio no molesta, pero si alguien
+va a abrir la URL para calificarla, se encuentra una pantalla congelada que
+parece una aplicación rota. El Static Site no tiene ese problema: es gratis y
+no se duerme nunca.
+
+Hay un efecto secundario menor: los topes de la recuperación de contraseña se
+llevan en memoria, así que cada vez que el servicio despierta empiezan de cero.
+Como el límite es para frenar abusos y no para contar nada importante, no pasa
+nada.
 
 ---
 

@@ -1,0 +1,60 @@
+# Despliegue en Render con un solo Blueprint.
+#
+# Render lee este archivo desde la raiz del repositorio y crea los dos
+# servicios de una vez. La base de datos NO va aqui: Render solo ofrece
+# PostgreSQL gestionado, asi que el MySQL del proyecto tiene que vivir en
+# otra parte (Railway, Aiven, Clever Cloud) y llegar por DATABASE_URL.
+#
+# Las variables con `sync: false` no se escriben aqui a proposito: Render las
+# pide en su panel al crear el servicio. Asi ninguna credencial acaba en el
+# repositorio.
+
+services:
+  # --- Backend: FastAPI -----------------------------------------------------
+  - type: web
+    name: motoshub-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /salud
+    envVars:
+      # Render no lee runtime.txt (eso es convencion de Heroku); la version
+      # de Python se fija con esta variable.
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ENTORNO
+        value: produccion
+      - key: DEPURACION
+        value: false
+      # La genera Render: larga, aleatoria y distinta a la de desarrollo.
+      - key: JWT_SECRET
+        generateValue: true
+      # Se pegan en el panel.
+      - key: DATABASE_URL
+        sync: false
+      - key: ORIGENES_PERMITIDOS
+        sync: false
+      - key: URL_FRONTEND
+        sync: false
+
+  # --- Frontend: React + Vite ya compilado ----------------------------------
+  # Como sitio estatico, que en Render es gratis y ademas no se duerme.
+  - type: web
+    name: motoshub-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    # Sin esta regla, entrar directo a /admin o recargar esa pagina daria 404:
+    # las rutas las resuelve React Router en el navegador, no el servidor.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Ojo: termina en /api, y se lee AL COMPILAR. Si la cambias, hay que
+      # volver a desplegar el Frontend.
+      - key: VITE_API_URL
+        sync: false
