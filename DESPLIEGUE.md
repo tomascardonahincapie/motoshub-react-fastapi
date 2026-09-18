@@ -69,21 +69,51 @@ con hacer `git push` de los últimos cambios.
 
 ### Cargar las tablas
 
-En la pestaña **Data** del servicio MySQL hay una consola de consultas. Pega
-ahí el contenido de `backend/database/schema.sql`, **quitando las dos primeras
-instrucciones** (`CREATE DATABASE` y `USE`): la base ya existe y se llama
-`railway`.
+Un solo archivo deja la base lista: `backend/database/schema.sql`. Crea las
+**14 tablas**, los tres usuarios de prueba (administrador, empleado y cliente),
+las **12 motocicletas** del catálogo y los **8 servicios** del taller. Los otros
+`.sql` de esa carpeta son migraciones para bases que ya existían; en una base
+nueva no hacen falta.
 
-Después carga los datos de demostración:
+> **Cuidado con el nombre de la base.** `schema.sql` empieza creando
+> `bd_jhm_tech_solutions` y cambiándose a ella, mientras que la base que crea
+> Railway se llama `railway`. Si lo pegas tal cual y dejas la `DATABASE_URL`
+> apuntando a `railway`, las tablas se crean en un sitio y el Backend las busca
+> en otro: arranca, pero no encuentra nada.
+>
+> La salida más limpia es no tocar el archivo y **cambiar el nombre de la base
+> en la URL**, de `/railway` a `/bd_jhm_tech_solutions`:
+>
+> ```
+> mysql://root:CLAVE@monorail.proxy.rlwy.net:33060/bd_jhm_tech_solutions
+> ```
+>
+> Si la plataforma no te deja crear bases nuevas (pasa en varios planes
+> gratuitos), entonces sí: borra del archivo las dos primeras instrucciones
+> (`CREATE DATABASE` y `USE`) y deja la URL como venía.
 
-- `backend/database/usuarios_demo.sql` — usuarios de cada rol
-- `backend/database/actualizar_imagenes.sql` — fotos del catálogo
-
-Si prefieres la línea de comandos, con el cliente de MySQL instalado:
+Con el cliente de MySQL instalado es una sola línea:
 
 ```bash
-mysql --host=HOST --port=PUERTO --user=root --password=CLAVE railway < backend/database/schema.sql
+mysql --host=HOST --port=PUERTO --user=root --password=CLAVE < backend/database/schema.sql
 ```
+
+Sin cliente instalado, pega el contenido del archivo en la consola de
+consultas que trae la plataforma (en Railway, pestaña **Data**).
+
+### Llenar los Dashboards
+
+Recién cargada, la base tiene catálogo y usuarios, pero ni una sola venta: los
+Dashboards y los reportes saldrían en blanco. Para generar un historial de
+demostración, apunta tu `.env` local a la base de la nube y ejecuta:
+
+```bash
+cd backend
+python scripts/datos_demo.py
+```
+
+Crea ventas repartidas en las últimas semanas, con sus facturas y algunas PQR,
+pasando por el mismo código que usa la API. Se deshace con `--limpiar`.
 
 ---
 
