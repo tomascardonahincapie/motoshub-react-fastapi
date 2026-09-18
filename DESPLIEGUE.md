@@ -40,6 +40,170 @@ para no añadir dependencias.
 
 ---
 
+## Paso a paso: Aiven + Render + Vercel
+
+El camino gratuito, en el orden en que hay que hacerlo. **El orden importa**:
+cada servicio necesita la dirección del anterior, y el Backend además necesita
+la del Frontend, así que al final hay que volver sobre él.
+
+### 1 · La base de datos, en Aiven
+
+1. Entra a [aiven.io](https://aiven.io) y crea la cuenta.
+2. **Create service** → **MySQL**.
+3. Elige la nube y la región que quieras (cualquiera sirve; una cercana
+   responde un poco más rápido) y, en el plan, **Free**.
+4. Ponle nombre al servicio y **Create service**.
+5. Espera a que el estado pase de *Rebuilding* a **Running**. Tarda un par de
+   minutos; no está roto.
+6. En **Overview**, copia el **Service URI**:
+
+   ```
+   mysql://avnadmin:CLAVE@mysql-xxxx.a.aivencloud.com:23456/defaultdb?ssl-mode=REQUIRED
+   ```
+
+   Guárdala, la vas a necesitar dos veces.
+
+### 2 · Cargar las tablas
+
+Desde tu propio equipo, con el proyecto abierto. Crea o edita `backend/.env` y
+pon la URI que acabas de copiar:
+
+```
+DATABASE_URL=mysql://avnadmin:CLAVE@mysql-xxxx.a.aivencloud.com:23456/defaultdb?ssl-mode=REQUIRED
+```
+
+Y ejecuta:
+
+```bash
+cd backend
+python scripts/cargar_esquema.py
+```
+
+Debe terminar diciendo que la base tiene **14 tablas**.
+
+> **Por qué un script y no el cliente `mysql`.** El que trae XAMPP es MariaDB
+> 10.4: no entiende la opción `--ssl-mode` que exige Aiven, ni el método de
+> autenticación por defecto de MySQL 8. El script usa PyMySQL, el mismo driver
+> de la aplicación, que habla los dos idiomas.
+
+Ahora llena los Dashboards, que si no salen en blanco:
+
+```bash
+python scripts/datos_demo.py
+```
+
+### 3 · El Backend, en Render
+
+1. Entra a [render.com](https://render.com) y conecta tu cuenta de GitHub.
+2. **New** → **Web Service** → elige el repositorio del proyecto.
+3. Rellena así:
+
+   | Campo | Valor |
+   |---|---|
+   | Name | `motoshub-api` |
+   | Language | `Python 3` |
+   | Root Directory | `backend` |
+   | Build Command | `pip install -r requirements.txt` |
+   | Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+   | Instance Type | `Free` |
+
+4. En **Environment Variables**, añade:
+
+   | Clave | Valor |
+   |---|---|
+   | `DATABASE_URL` | La URI de Aiven, pegada tal cual |
+   | `JWT_SECRET` | Una cadena larga y aleatoria, distinta a la de desarrollo |
+   | `ENTORNO` | `produccion` |
+   | `DEPURACION` | `false` |
+
+5. En **Advanced**, **Health Check Path**: `/salud`.
+6. **Create Web Service** y espera a que el log termine en *Your service is
+   live*.
+7. Copia la URL que te queda arriba, del estilo
+   `https://motoshub-api.onrender.com`, y compruébala:
+
+   - `https://motoshub-api.onrender.com/salud` → `"base_datos": "conectada"`
+   - `https://motoshub-api.onrender.com/docs` → Swagger con los 45 endpoints
+
+> Si prefieres no llenar formularios, el repositorio trae un `render.yaml`:
+> **New** → **Blueprint** lo lee y crea los servicios solo. Ojo que ese archivo
+> crea *también* el Frontend en Render; si lo vas a poner en Vercel, borra ese
+> segundo servicio o quédate con el formulario.
+
+### 4 · El Frontend, en Vercel
+
+1. Entra a [vercel.com](https://vercel.com) y conecta GitHub.
+2. **Add New** → **Project** → **Import** en el repositorio del proyecto.
+3. **Root Directory**: pulsa *Edit* y elige `frontend`. El resto lo detecta
+   solo: framework *Vite*, build `npm run build`, salida `dist`.
+4. Despliega **Environment Variables** y añade una:
+
+   | Clave | Valor |
+   |---|---|
+   | `VITE_API_URL` | `https://motoshub-api.onrender.com/api` |
+
+   El `/api` del final no es opcional: sin él todas las peticiones dan 404.
+
+5. **Deploy**. Al terminar copia el dominio, del estilo
+   `https://motoshub.vercel.app`.
+
+### 5 · Volver a Render a cerrar el CORS
+
+El navegador bloquea las peticiones a un dominio distinto salvo que el Backend
+diga expresamente que ese origen está autorizado. Como hasta ahora no existía,
+no se pudo configurar antes.
+
+En Render, servicio `motoshub-api` → **Environment** → añade:
+
+| Clave | Valor |
+|---|---|
+| `ORIGENES_PERMITIDOS` | `https://motoshub.vercel.app` |
+| `URL_FRONTEND` | `https://motoshub.vercel.app` |
+
+Sin comillas, sin corchetes y **sin barra al final**. Guarda: Render vuelve a
+desplegar solo.
+
+### 6 · Comprobar
+
+Abre tu dominio de Vercel y repasa:
+
+| Qué | Debe pasar |
+|---|---|
+| Portada | Carga y el catálogo muestra las 12 motos |
+| Sesión | Entrar como `admin@jhmtech.com` |
+| Dashboard | Las tarjetas y los gráficos traen datos |
+| Rutas | Recargar en `/admin` no da 404 |
+| Reportes | El reporte del día baja en PDF y en Excel |
+| Consola | Sin errores rojos de CORS (F12) |
+
+Si la primera visita tarda casi un minuto, no está roto: es el Backend
+despertando (ver más abajo).
+
+### Lo que conviene saber antes de entregar
+
+**El plan gratuito de Render se duerme.** A los ~15 minutos sin visitas se
+apaga, y la siguiente tarda cerca de un minuto en responder. Quien abra la URL
+sin saberlo ve una pantalla en blanco y piensa que la aplicación no funciona.
+Si vas a pasarle el enlace a alguien, ábrelo tú unos minutos antes para que
+esté caliente. El Frontend en Vercel no tiene ese problema: sirve archivos
+estáticos desde su CDN y responde siempre al instante.
+
+**El orden al cambiar cosas.** `VITE_API_URL` se lee *al compilar*, no al
+arrancar. Si algún día cambias el dominio del Backend, no basta con editar la
+variable en Vercel: hay que volver a desplegar el Frontend.
+
+**Las credenciales.** Ni la URI de Aiven ni el `JWT_SECRET` se escriben en el
+repositorio: viven en los paneles de Render y en tu `.env` local, que está en
+`.gitignore`.
+
+---
+
+## Referencia general (Railway y equivalentes)
+
+Lo que sigue es la versión detallada por plataforma. Si ya seguiste el paso a
+paso de arriba, no necesitas nada de aquí salvo que algo falle o quieras
+desplegar en otro sitio.
+
 ## Paso 1 · Subir el proyecto a GitHub
 
 Railway despliega desde un repositorio. Si el proyecto ya está subido, basta
