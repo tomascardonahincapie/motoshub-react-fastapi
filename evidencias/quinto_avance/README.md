@@ -12,12 +12,10 @@ verdadera de los comandos y el contenido de los archivos del proyecto.
 lleva los 25 requerimientos con su estado, la captura incrustada y una nota de
 entrega en cada uno.
 
-**23 de 25 cumplidos (92 %).** Los dos que faltan dependen de algo externo al
-código:
+**24 de 25 cumplidos (96 %).** El que falta depende de algo externo al código:
 
 | Requerimiento | Estado | Qué falta |
 |---|---|---|
-| REQ-18 · Chatbot con IA | En Proceso | Cargar una API Key en `IA_API_KEY`. La integración está construida y probada con el proveedor simulado; sin clave el chatbot responde con su motor de reglas. |
 | REQ-20 · Despliegue | En Proceso | Ejecutar el despliegue y publicar la URL. La configuración está lista y ensayada en local; hace falta crear las cuentas. Ver [`DESPLIEGUE.md`](../../DESPLIEGUE.md). |
 
 ## Índice
@@ -76,7 +74,7 @@ código:
 | `ev24_radicar_pqr.png` | Registro de una PQR por parte del cliente |
 | `ev25_gestion_pqr.png` | Gestión y respuesta de una PQR |
 | `ev26_chatbot.png` | Conversación con el chatbot en el sitio público |
-| `ev27_integracion_ia.png` | Integración del chatbot con el servicio de IA |
+| `ev27_integracion_ia.png` | El chatbot respondiendo con IA: conversación real y precios tomados de MySQL |
 
 ### Seguridad, pruebas y despliegue
 
