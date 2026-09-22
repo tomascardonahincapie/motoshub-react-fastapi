@@ -12,11 +12,15 @@ verdadera de los comandos y el contenido de los archivos del proyecto.
 lleva los 25 requerimientos con su estado, la captura incrustada y una nota de
 entrega en cada uno.
 
-**24 de 25 cumplidos (96 %).** El que falta depende de algo externo al código:
+**25 de 25 cumplidos (100 %).**
 
-| Requerimiento | Estado | Qué falta |
+La aplicación está desplegada y en funcionamiento:
+
+| Pieza | Plataforma | Dirección |
 |---|---|---|
-| REQ-20 · Despliegue | En Proceso | Ejecutar el despliegue y publicar la URL. La configuración está lista y ensayada en local; hace falta crear las cuentas. Ver [`DESPLIEGUE.md`](../../DESPLIEGUE.md). |
+| Frontend | Vercel | https://motoshub-react-fastapi.vercel.app |
+| Backend | Render | https://motoshub-react-fastapi.onrender.com |
+| Base de datos | Aiven | MySQL 8.4 gestionado |
 
 ## Índice
 
@@ -85,7 +89,7 @@ entrega en cada uno.
 | `ev30_pruebas_automaticas.png` | 133 pruebas automáticas en verde |
 | `ev31_pruebas_endpoints.png` | Pruebas de los endpoints: ventas y facturación |
 | `ev32_pruebas_endpoints_2.png` | Pruebas de reportes, PQR, Dashboards y chatbot |
-| `ev33_despliegue.png` | Configuración de despliegue en producción |
+| `ev33_despliegue.png` | La aplicación desplegada y funcionando en sus dominios públicos |
 | `ev38_postman_newman.png` | La colección de Postman corrida entera: 97 comprobaciones, 0 fallos |
 
 ## Cómo reproducirlo
@@ -147,14 +151,3 @@ npx newman run backend/postman/MotosHub_API.postman_collection.json
 | 23 | Componentes reutilizables de React | `ev36` |
 | 24 | Seguridad integral de los endpoints | `ev37`, `ev29` |
 | 25 | Pruebas de endpoints con Postman | `ev38`, `ev31`, `ev32` |
-
-## Pendiente
-
-El **requerimiento 20** pide además la **URL pública de la aplicación
-desplegada**. La configuración está lista y documentada, pero el despliegue en
-sí necesita una cuenta de Railway (o equivalente): hay que crearla y seguir el
-paso a paso de [`DESPLIEGUE.md`](../../DESPLIEGUE.md). Una vez desplegado,
-conviene añadir aquí dos capturas más:
-
-- La aplicación funcionando en su dominio público.
-- `GET /salud` del Backend desplegado respondiendo `"base_datos": "conectada"`.

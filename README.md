@@ -1,4 +1,9 @@
 # Proyecto — Quinto Avance: React + Vite + FastAPI + MySQL + IA
+
+> **La aplicación está en línea:**
+> Sitio → https://motoshub-react-fastapi.vercel.app
+> API → https://motoshub-react-fastapi.onrender.com/docs
+
 ### MotosHub / JHM Tech Solutions (Ficha 3406211)
 
 Aplicación full-stack que integra un Frontend en **React + Vite + Tailwind CSS**
