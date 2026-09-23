@@ -54,7 +54,6 @@ function Contadores({ resumen, filtro, setFiltro }) {
 }
 
 function FormularioRadicar({ abierto, onCerrar, token, alGuardar }) {
-  const vigente = usePeticionVigente();
   const [datos, setDatos] = useState({ tipo: 'peticion', asunto: '', descripcion: '' });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
@@ -234,6 +233,7 @@ export default function PanelPqr({ token, puedeGestionar = false, avisar, alFall
   const [seleccionada, setSeleccionada] = useState(null);
   const [radicando, setRadicando] = useState(false);
   const [error, setError] = useState('');
+  const vigente = usePeticionVigente();
 
   const cargar = useCallback(async () => {
     const esVigente = vigente();
@@ -249,7 +249,7 @@ export default function PanelPqr({ token, puedeGestionar = false, avisar, alFall
     } finally {
       if (esVigente()) setCargando(false);
     }
-  }, [filtro, busqueda, token]);
+  }, [filtro, busqueda, token, vigente]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
