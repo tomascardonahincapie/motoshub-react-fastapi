@@ -10,6 +10,8 @@ export default function Input({
   placeholder,
   icono = null,
   ayuda = null,
+  autoComplete,
+  autoFocus = false,
 }) {
   const contador = maxLength ? `${value?.length || 0}/${maxLength}` : null;
   const casiLleno = maxLength && (value?.length || 0) > maxLength * 0.9;
@@ -37,6 +39,8 @@ export default function Input({
           onBlur={onBlur}
           maxLength={maxLength}
           placeholder={placeholder}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
           aria-invalid={!!error}
           className={`campo ${error ? 'campo-error' : ''} ${icono ? 'pl-10' : ''}`}
         />
