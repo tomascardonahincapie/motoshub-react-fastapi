@@ -116,8 +116,25 @@ python scripts/datos_demo.py
    | `ENTORNO` | `produccion` |
    | `DEPURACION` | `false` |
 
-5. En **Advanced**, **Health Check Path**: `/salud`.
-6. **Create Web Service** y espera a que el log termine en *Your service is
+5. Si quieres que la **recuperación de contraseña envíe correos de verdad**,
+   añade además las variables del servidor SMTP:
+
+   | Variable | Valor |
+   |---|---|
+   | `SMTP_HOST` | `smtp.gmail.com` |
+   | `SMTP_PUERTO` | `587` |
+   | `SMTP_USUARIO` | Tu dirección de correo |
+   | `SMTP_PASSWORD` | La contraseña de aplicación (no la del correo) |
+   | `SMTP_REMITENTE` | `MotosHub <no-reply@motoshub.com>` |
+
+   > **Sin estas variables el fallo es silencioso.** El endpoint responde igual
+   > de bien —a propósito, para no delatar qué correos están registrados— pero
+   > el enlace se escribe en el log en lugar de enviarse, y el usuario se queda
+   > esperando un correo que nunca sale. Para saber en qué estado está, mira
+   > `GET /salud`: el campo `correo` dice `configurado` o `sin configurar`.
+
+6. En **Advanced**, **Health Check Path**: `/salud`.
+7. **Create Web Service** y espera a que el log termine en *Your service is
    live*.
 7. Copia la URL que te queda arriba, del estilo
    `https://motoshub-api.onrender.com`, y compruébala:
@@ -442,6 +459,7 @@ Comprueba el resultado en `https://TU-BACKEND.up.railway.app/api/chatbot/estado`
 | `/salud` dice «sin conexión» | `DATABASE_URL` incorrecta, o las tablas no se han cargado |
 | 404 al recargar `/admin` | El Frontend no se está sirviendo con `node servidor.js` |
 | El enlace de recuperación apunta a localhost | Falta `URL_FRONTEND` en el Backend |
+| El correo de recuperación nunca llega | Faltan las variables `SMTP_*`. Compruébalo en `/salud`: `"correo": "sin configurar"` |
 | El chatbot responde pero sin IA | Faltan `IA_PROVEEDOR` o `IA_API_KEY` |
 
 ---

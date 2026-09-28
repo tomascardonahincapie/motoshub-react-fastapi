@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.base_datos import motor
+from app.core.notificaciones import smtp_configurado
 from app.core.configuracion import configuracion
 from app.errores import ErrorDeDominio
 from app.middlewares import cabeceras_de_seguridad, registrar_peticion
@@ -199,4 +200,15 @@ def estado_del_servicio():
         logger.error('La base de datos no responde: %s', error)
         base_datos = 'sin conexión'
 
-    return {'ok': base_datos == 'conectada', 'estado': 'ok', 'base_datos': base_datos}
+    # Se informa si hay servidor de correo, porque su ausencia es silenciosa:
+    # sin SMTP el enlace de recuperacion se escribe en el log y la peticion
+    # responde igual de bien, asi que desde fuera parece que el correo se
+    # envio. Es un booleano, no expone ninguna credencial.
+    correo = 'configurado' if smtp_configurado() else 'sin configurar'
+
+    return {
+        'ok': base_datos == 'conectada',
+        'estado': 'ok',
+        'base_datos': base_datos,
+        'correo': correo,
+    }
