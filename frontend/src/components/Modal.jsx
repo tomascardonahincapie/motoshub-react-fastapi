@@ -1,9 +1,18 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * Ventana modal reutilizable para los formularios del panel.
  * Se cierra con Escape o haciendo clic fuera, y bloquea el desplazamiento
  * del fondo mientras está abierta.
+ *
+ * Se dibuja con un portal, colgando de <body> en vez de donde se escribe.
+ * No es un capricho: `position: fixed` deja de medirse contra la pantalla en
+ * cuanto un ancestro tiene `transform`, `filter` o `backdrop-filter`. El panel
+ * envuelve cada seccion en un `animate-subir`, que al terminar deja puesto un
+ * transform, y con eso el velo pasaba a cubrir los 7000 pixeles del panel y la
+ * tarjeta, centrada con `my-auto`, aparecia a mitad de camino: se oscurecia la
+ * pantalla y no se veia el formulario por ningun lado.
  */
 export default function Modal({ abierto, onCerrar, titulo, descripcion, children, ancho = 'max-w-2xl' }) {
   useEffect(() => {
@@ -23,7 +32,7 @@ export default function Modal({ abierto, onCerrar, titulo, descripcion, children
 
   if (!abierto) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-950/80 p-4 backdrop-blur-sm sm:items-center"
       onClick={onCerrar}
@@ -54,6 +63,7 @@ export default function Modal({ abierto, onCerrar, titulo, descripcion, children
 
         <div className="px-6 py-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

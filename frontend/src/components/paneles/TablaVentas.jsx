@@ -302,7 +302,14 @@ export default function TablaVentas({
               </thead>
               <tbody className="divide-y divide-line-soft">
                 {ventas.map((venta) => (
-                  <tr key={venta.id_venta} className="fila-tabla">
+                  // La fila entera abre el detalle. El boton "Ver" de la
+                  // ultima columna queda fuera de pantalla en cuanto la tabla
+                  // se desborda, y entonces no habia forma de abrir la venta.
+                  <tr
+                    key={venta.id_venta}
+                    onClick={() => setDetalle(venta)}
+                    className="fila-tabla cursor-pointer"
+                  >
                     <td className="px-5 py-3">
                       <p className="font-semibold text-mist-100">{venta.numero_venta}</p>
                       {venta.numero_factura && (
