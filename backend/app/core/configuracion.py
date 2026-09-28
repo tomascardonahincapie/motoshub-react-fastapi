@@ -103,7 +103,7 @@ class Configuracion(BaseSettings):
     negocio_nit: str = '901.456.789-1'
     negocio_direccion: str = 'Cra. 45 #12-30'
     negocio_ciudad: str = 'Medellin, Colombia'
-    negocio_telefono: str = '+57 300 000 0000'
+    negocio_telefono: str = '+57 304 410 9940'
     negocio_email: str = 'contacto@motoshub.com'
 
     # --- Inteligencia Artificial (chatbot) --------------------------------

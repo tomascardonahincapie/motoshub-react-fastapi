@@ -35,3 +35,6 @@ desktop.ini
 # Temporales del proceso de evidencias
 # ---------------------------------------------------------------------------
 .evidencias-tmp/
+
+# Archivos de bloqueo que crea Word al tener un documento abierto
+~$*

@@ -7,9 +7,9 @@
 export const NEGOCIO = {
   nombre: 'MotosHub',
   // Formato internacional sin "+" ni espacios. 57 = Colombia.
-  whatsapp: '573000000000',
+  whatsapp: '573044109940',
   correo: 'contacto@motoshub.com',
-  telefono: '+57 300 000 0000',
+  telefono: '+57 304 410 9940',
   direccion: 'Cra. 45 #12-30, Medellín, Colombia',
   horario: 'Lun a Vie 8:00 - 18:00 · Sáb 9:00 - 14:00',
 };
