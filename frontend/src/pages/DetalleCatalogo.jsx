@@ -9,7 +9,7 @@ import { enlaceCompra, formatearPrecio } from '../config';
 
 /**
  * Ficha de un producto o de un servicio. Ambos comparten la misma plantilla:
- * foto grande, precio, datos y el botón que abre WhatsApp para comprar o
+ * foto grande, precio, datos y el botón que abre WhatsApp para preguntar o
  * agendar. Solo cambian los campos propios de cada entidad.
  */
 export default function DetalleCatalogo({ tipo = 'producto' }) {
@@ -169,7 +169,7 @@ export default function DetalleCatalogo({ tipo = 'producto' }) {
                 disabled={agotado}
                 className="btn btn-primario flex-1"
               >
-                {esServicio ? 'Agendar este servicio' : 'Añadir al carrito'}
+                {esServicio ? 'Añadir este servicio al pedido' : 'Añadir esta moto al pedido'}
               </button>
               <a
                 href={enlaceCompra(item, tipo)}
@@ -189,8 +189,8 @@ export default function DetalleCatalogo({ tipo = 'producto' }) {
             </div>
 
             <p className="mt-4 text-center text-xs leading-relaxed text-mist-600 sm:text-left">
-              Al confirmar la compra desde el carrito se registra la venta y se emite tu
-              factura, que puedes descargar en PDF desde tu panel.
+              No se paga en línea. Envías tu pedido por WhatsApp, acordamos
+              disponibilidad y forma de pago, y la factura queda en tu panel.
             </p>
           </div>
         </div>

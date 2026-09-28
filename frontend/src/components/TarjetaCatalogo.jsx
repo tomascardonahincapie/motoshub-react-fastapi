@@ -5,12 +5,12 @@ import IconoWhatsApp from './IconoWhatsApp';
 import { enlaceCompra, formatearPrecio } from '../config';
 
 /**
- * Tarjeta del catálogo. Sirve igual para un producto y para un servicio:
- * ambos muestran foto, etiqueta, precio y los botones para comprar.
+ * Tarjeta del catálogo. Sirve igual para una moto y para un servicio:
+ * ambas muestran foto, etiqueta, precio y las dos formas de avanzar.
  *
- * El botón principal añade el artículo al carrito, desde donde la compra se
- * registra como una venta real en la base de datos. El de WhatsApp se
- * conserva para quien prefiera cerrar el trato hablando con alguien.
+ * Aquí no se compra. El botón principal suma el artículo al pedido, que se
+ * envía por WhatsApp desde el panel lateral, y el de WhatsApp pregunta por
+ * este artículo suelto. El trato se cierra hablando.
  */
 export default function TarjetaCatalogo({ item, tipo = 'producto', className = '', retardo = 0 }) {
   const esServicio = tipo === 'servicio';
@@ -93,9 +93,9 @@ export default function TarjetaCatalogo({ item, tipo = 'producto', className = '
             onClick={() => agregar(item, tipo)}
             disabled={agotado}
             className="btn btn-primario flex-1 !px-3 !text-[0.7rem]"
-            aria-label={`${esServicio ? 'Agendar' : 'Comprar'} ${item.nombre}`}
+            aria-label={`Añadir ${item.nombre} al pedido`}
           >
-            {esServicio ? 'Agendar' : 'Comprar'}
+            Añadir
           </button>
           <a
             href={enlaceCompra(item, tipo)}

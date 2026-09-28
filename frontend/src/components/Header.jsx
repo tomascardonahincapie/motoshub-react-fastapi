@@ -57,11 +57,11 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Carrito: el número sale del propio carrito, no del Backend */}
+          {/* Pedido: el número sale del propio navegador, no del Backend */}
           <button
             type="button"
             onClick={abrir}
-            aria-label={`Abrir el carrito (${totales.unidades} artículos)`}
+            aria-label={`Abrir tu pedido (${totales.unidades} ${totales.unidades === 1 ? 'artículo' : 'artículos'})`}
             className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-ink-850 text-mist-200 transition-colors hover:border-brand-500/50 hover:text-brand-400"
           >
             <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">

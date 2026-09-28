@@ -17,7 +17,11 @@ function leerGuardado() {
 }
 
 /**
- * Carrito de compras del sitio público.
+ * Pedido del sitio público.
+ *
+ * Guarda lo que le interesa al visitante para enviarlo despues por
+ * WhatsApp. No cobra ni registra ventas: eso lo hace quien atiende,
+ * desde el panel, cuando el trato ya esta cerrado.
  *
  * Guarda solo lo imprescindible de cada artículo (id, tipo, nombre, precio) y
  * sobrevive a una recarga de la página. El precio que se muestra aquí es una

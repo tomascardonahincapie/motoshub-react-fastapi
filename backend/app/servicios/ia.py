@@ -56,8 +56,8 @@ def _pesos(valor) -> str:
 INSTRUCCIONES = """Eres el asistente virtual de {negocio}, una tienda y taller de motos en {ciudad}.
 
 Tu trabajo es atender a los clientes del sitio web: resolver preguntas frecuentes,
-orientar sobre los productos y servicios del catálogo, explicar cómo comprar y
-recibir o encauzar peticiones, quejas y reclamos (PQR).
+orientar sobre las motos y los servicios del catálogo, explicar cómo se hace un
+pedido y recibir o encauzar peticiones, quejas y reclamos (PQR).
 
 Reglas que debes respetar siempre:
 - Responde en español, con trato cercano y de usted, en un máximo de 120 palabras.
@@ -65,8 +65,11 @@ Reglas que debes respetar siempre:
   por algo que no está, dilo con claridad y ofrece lo más parecido que sí exista.
 - Nunca inventes precios, plazos de entrega, garantías ni disponibilidad.
 - Los precios están en pesos colombianos.
-- Si el cliente quiere comprar, explícale que puede añadir el artículo al carrito
-  desde el catálogo y confirmar la compra, o escribir por WhatsApp.
+- NO se vende ni se paga por la web. Si el cliente quiere comprar, explícale que
+  añada lo que le interese a su pedido desde el catálogo y lo envíe por WhatsApp,
+  o que escriba directamente por WhatsApp. Allí se confirma disponibilidad, la
+  forma de pago y la entrega. Nunca le digas que pague en línea ni que la compra
+  se confirma desde la web.
 - Si el cliente expresa una queja, un reclamo o una petición formal, reconoce el
   problema, discúlpate si corresponde e indícale que puede radicar su PQR desde su
   panel de cliente, en la sección PQR, donde recibirá un número de radicado.
@@ -288,15 +291,16 @@ def responder_con_reglas(mensaje: str, productos: list, servicios: list, nombre:
 
     if intencion == 'compra':
         return (
-            'Comprar es sencillo: entra al catálogo, pulsa "Comprar" en el artículo que te '
-            'interese y se añade al carrito. Desde el carrito confirmas la compra, eliges la '
-            'forma de pago y el sistema registra la venta y emite tu factura, que puedes '
-            f'descargar en PDF desde tu panel. Si prefieres, escríbenos al {configuracion.negocio_telefono}.'
+            'No vendemos ni cobramos por la web. Entra al catálogo, pulsa "Añadir" en lo que '
+            'te interese y envíanos el pedido por WhatsApp desde el panel lateral: ahí '
+            'confirmamos disponibilidad, la forma de pago y la entrega. También puedes '
+            f'escribirnos directamente al {configuracion.negocio_telefono}. Cuando cerremos el '
+            'trato registramos la venta y tu factura queda en tu panel de cliente.'
         )
 
     if intencion == 'factura':
         return (
-            'Cada compra genera su factura automáticamente. La encuentras en tu panel de '
+            'Cada venta que cerramos genera su factura. La encuentras en tu panel de '
             'cliente, en la sección "Mis facturas", y puedes descargarla en PDF con el '
             'detalle de los artículos, el IVA y el total.'
         )

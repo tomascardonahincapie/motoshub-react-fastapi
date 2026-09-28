@@ -68,9 +68,34 @@ export function enlaceWhatsApp(mensaje) {
  * Ejemplo: "Hola MotosHub, quiero comprar el producto *Casco Integral* ($480.000)..."
  */
 export function enlaceCompra(item, tipo = 'producto') {
-  const accion = tipo === 'servicio' ? 'quiero agendar el servicio' : 'quiero comprar el producto';
+  const accion = tipo === 'servicio' ? 'quiero agendar el servicio' : 'quiero preguntar por la moto';
   const mensaje =
     `Hola ${NEGOCIO.nombre}, ${accion} *${item.nombre}* (${formatearPrecio(item.precio)}). ` +
     '¿Me confirman disponibilidad y forma de pago?';
+  return enlaceWhatsApp(mensaje);
+}
+
+/**
+ * Mensaje con el pedido completo del carrito.
+ *
+ * No se cobra en línea: el cliente arma su pedido, lo manda por WhatsApp y el
+ * trato se cierra hablando. La venta la registra después quien atiende, ya
+ * acordada. Por eso el total va como referencia y no como un cobro.
+ */
+export function enlacePedido(items, totales) {
+  const lineas = items.map(
+    (item) => `• ${item.nombre} x${item.cantidad} — ${formatearPrecio(item.precio * item.cantidad)}`,
+  );
+
+  const mensaje = [
+    `Hola ${NEGOCIO.nombre}, me interesa este pedido:`,
+    '',
+    ...lineas,
+    '',
+    `Total aproximado: ${formatearPrecio(totales.total)} (IVA incluido)`,
+    '',
+    '¿Me confirman disponibilidad y cómo seguimos?',
+  ].join('\n');
+
   return enlaceWhatsApp(mensaje);
 }
