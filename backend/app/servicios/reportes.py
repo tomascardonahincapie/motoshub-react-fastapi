@@ -55,8 +55,11 @@ def datos_reporte(sesion: Session, dia: date) -> dict:
 
     resumen = crud_ventas.resumen(ventas)
     resumen['anuladas'] = sum(1 for v in ventas if v.estado == 'anulada')
+    resumen['solicitudes'] = sum(1 for v in ventas if v.estado == 'solicitada')
+    # Un pedido sin confirmar no movio inventario, asi que no suma unidades.
     resumen['unidades'] = sum(
-        d.cantidad for v in ventas if v.estado != 'anulada' for d in v.detalles
+        d.cantidad for v in ventas
+        if v.estado not in ('anulada', 'solicitada') for d in v.detalles
     )
 
     return {

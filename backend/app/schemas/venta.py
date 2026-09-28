@@ -8,7 +8,7 @@ modificando la peticion.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -129,3 +129,25 @@ class RespuestaVentaCreada(BaseModel):
     total: Decimal
     id_factura: int | None = None
     numero_factura: str | None = None
+
+
+class SolicitudCrear(BaseModel):
+    """Pedido enviado desde el sitio publico antes de hablar por WhatsApp."""
+
+    model_config = ConfigDict(json_schema_extra={
+        'example': {
+            'items': [{'tipo_item': 'producto', 'id_item': 1, 'cantidad': 1}],
+            'observaciones': 'Pregunto por financiacion',
+        },
+    })
+
+    items: Annotated[list[ItemVentaCrear], Field(min_length=1, max_length=20)]
+    observaciones: Annotated[str | None, Field(default=None, max_length=255)]
+
+
+class RespuestaSolicitud(BaseModel):
+    ok: bool = True
+    message: str
+    id_venta: int
+    numero_venta: str
+    total: Decimal

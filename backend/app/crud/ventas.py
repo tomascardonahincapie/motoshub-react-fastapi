@@ -5,7 +5,7 @@ del catalogo, jamas de la peticion. El Frontend solo dice que articulo quiere
 y cuantas unidades.
 """
 
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import func, or_, select
@@ -102,6 +102,28 @@ def calcular_totales(detalles: list[DetalleVenta]) -> dict[str, Decimal]:
     }
 
 
+def _comprobar_disponibilidad(sesion: Session, detalles: list[DetalleVenta]) -> None:
+    """Revisa que las lineas de un pedido todavia tengan unidades.
+
+    Se usa al confirmar un pedido, no al crearlo: entre que el cliente pidio y
+    alguien confirma pueden haberse vendido esas mismas motos en el mostrador,
+    y confirmar sin mirar dejaria el stock en negativo.
+    """
+    pedidas: dict[int, int] = {}
+    for detalle in detalles:
+        if detalle.tipo_item != 'producto' or detalle.producto_id is None:
+            continue
+        pedidas[detalle.producto_id] = pedidas.get(detalle.producto_id, 0) + detalle.cantidad
+        producto = sesion.get(Producto, detalle.producto_id)
+        if producto is None:
+            continue
+        if pedidas[detalle.producto_id] > producto.stock:
+            raise ConflictoDeNegocio(
+                f'Ya no hay unidades suficientes de "{producto.nombre}": '
+                f'quedan {producto.stock} y el pedido lleva {pedidas[detalle.producto_id]}',
+            )
+
+
 def _mover_stock(sesion: Session, detalles: list[DetalleVenta], signo: int) -> None:
     """Mueve el inventario: signo -1 al vender, +1 al anular la venta."""
     for detalle in detalles:
@@ -112,15 +134,25 @@ def _mover_stock(sesion: Session, detalles: list[DetalleVenta], signo: int) -> N
             producto.stock = max(0, producto.stock + signo * detalle.cantidad)
 
 
-def crear(sesion: Session, datos: dict, cliente: Usuario, vendedor: Usuario | None) -> Venta:
-    """Registra la venta completa: lineas, totales y movimiento de inventario."""
+def crear(sesion: Session, datos: dict, cliente: Usuario, vendedor: Usuario | None,
+          solicitud: bool = False) -> Venta:
+    """Registra la venta completa: lineas, totales y movimiento de inventario.
+
+    Con `solicitud=True` se registra un pedido del sitio publico: queda en
+    estado 'solicitada' y no toca el inventario hasta que alguien lo confirme.
+    """
     detalles = _armar_detalles(sesion, datos['items'])
     totales = calcular_totales(detalles)
 
-    # El estado inicial depende de como se pago: lo que entra por caja o por
+    # Un pedido del sitio publico entra como 'solicitada': nadie lo ha
+    # confirmado todavia, asi que no descuenta inventario ni cuenta en los
+    # informes. El resto depende de como se pago: lo que entra por caja o por
     # transferencia queda pagado; el credito queda pendiente de cobro.
     metodo = datos.get('metodo_pago', 'efectivo')
-    estado = 'pendiente' if metodo == 'credito' else 'pagada'
+    if solicitud:
+        estado = 'solicitada'
+    else:
+        estado = 'pendiente' if metodo == 'credito' else 'pagada'
 
     ultimo_error: IntegrityError | None = None
 
@@ -138,7 +170,10 @@ def crear(sesion: Session, datos: dict, cliente: Usuario, vendedor: Usuario | No
         sesion.add(venta)
 
         try:
-            _mover_stock(sesion, detalles, signo=-1)
+            # El pedido no reserva unidades: si lo hiciera, bastaria con pedir
+            # para dejar el catalogo en cero sin comprar nada.
+            if not solicitud:
+                _mover_stock(sesion, detalles, signo=-1)
             sesion.commit()
         except IntegrityError as error:
             # Otra venta se llevo el mismo consecutivo: se pide el siguiente.
@@ -230,10 +265,11 @@ def obtener(sesion: Session, id_venta: int) -> Venta | None:
 def resumen(ventas: list[Venta]) -> dict:
     """Totales del listado que se acaba de consultar.
 
-    Las ventas anuladas aparecen en el listado pero no suman dinero: si lo
-    hicieran, el total del historial no cuadraria con lo realmente facturado.
+    Las anuladas y los pedidos sin confirmar aparecen en el listado pero no
+    suman dinero: las primeras se deshicieron y los segundos todavia no han
+    ocurrido. Si sumaran, el total del historial no cuadraria con lo facturado.
     """
-    validas = [v for v in ventas if v.estado != 'anulada']
+    validas = [v for v in ventas if v.estado not in ('anulada', 'solicitada')]
     total = redondear(sum((Decimal(v.total) for v in validas), Decimal('0')))
 
     return {
@@ -247,12 +283,29 @@ def resumen(ventas: list[Venta]) -> dict:
 
 
 def cambiar_estado(sesion: Session, venta: Venta, estado: str) -> Venta:
-    """Cambia el estado y devuelve el inventario cuando la venta se anula."""
+    """Cambia el estado y ajusta el inventario segun corresponda.
+
+    Confirmar un pedido es el momento en que las unidades salen de verdad del
+    inventario, y por eso se vuelve a comprobar la disponibilidad: entre que el
+    cliente pidio y alguien confirma pueden haberse vendido en el mostrador.
+    """
     if venta.estado == estado:
         return venta
 
     if venta.estado == 'anulada':
         raise ConflictoDeNegocio('Una venta anulada no puede cambiar de estado')
+
+    if venta.estado == 'solicitada':
+        if estado == 'anulada':
+            # Descartar un pedido no devuelve nada: nunca se descontó.
+            venta.estado = estado
+            sesion.commit()
+            sesion.refresh(venta)
+            return venta
+        _comprobar_disponibilidad(sesion, venta.detalles)
+        _mover_stock(sesion, venta.detalles, signo=-1)
+    elif estado == 'solicitada':
+        raise ConflictoDeNegocio('Una venta ya registrada no puede volver a ser un pedido')
 
     if estado == 'anulada':
         _mover_stock(sesion, venta.detalles, signo=+1)
@@ -265,6 +318,31 @@ def cambiar_estado(sesion: Session, venta: Venta, estado: str) -> Venta:
     sesion.commit()
     sesion.refresh(venta)
     return venta
+
+
+DIAS_PARA_DESCARTAR = 7
+
+
+def descartar_solicitudes_vencidas(sesion: Session, dias: int = DIAS_PARA_DESCARTAR) -> int:
+    """Descarta los pedidos que llevan demasiado tiempo sin confirmarse.
+
+    Al pulsar el boton de WhatsApp se registra el pedido, pero nada garantiza
+    que la persona llegara a enviar el mensaje. Sin esta limpieza, la lista se
+    llenaria de pedidos que nunca existieron. No hay inventario que devolver,
+    porque un pedido nunca lo descuenta.
+    """
+    limite = datetime.now() - timedelta(days=dias)
+    vencidas = sesion.scalars(
+        select(Venta).where(Venta.estado == 'solicitada', Venta.fecha_venta < limite),
+    ).unique().all()
+
+    for venta in vencidas:
+        venta.estado = 'anulada'
+        venta.observaciones = (venta.observaciones or '') + ' [descartada por falta de respuesta]'
+
+    if vencidas:
+        sesion.commit()
+    return len(vencidas)
 
 
 def contar(sesion: Session) -> int:

@@ -30,8 +30,13 @@ from app.models import (
 MESES = ('ene', 'feb', 'mar', 'abr', 'may', 'jun',
          'jul', 'ago', 'sep', 'oct', 'nov', 'dic')
 
+# Ni una venta anulada ni un pedido sin confirmar deben sumar en los
+# indicadores: el primero se deshizo y el segundo todavia no ha ocurrido.
+NO_CUENTAN = ('anulada', 'solicitada')
+
 ETIQUETAS_ESTADO = {
-    'pendiente': 'Pendiente', 'pagada': 'Pagada', 'anulada': 'Anulada',
+    'solicitada': 'Solicitada', 'pendiente': 'Pendiente',
+    'pagada': 'Pagada', 'anulada': 'Anulada',
 }
 ETIQUETAS_PAGO = {
     'efectivo': 'Efectivo', 'tarjeta': 'Tarjeta',
@@ -85,7 +90,7 @@ def serie_de_ventas(ventas: list[Venta], desde: date, hasta: date, agrupacion: s
     }
 
     for venta in ventas:
-        if venta.estado == 'anulada':
+        if venta.estado in NO_CUENTAN:
             continue
         clave, etiqueta = _clave_periodo(venta.fecha_venta, agrupacion)
         casilla = acumulado.setdefault(
@@ -106,7 +111,7 @@ def ranking_articulos(ventas: list[Venta], tope: int = 8) -> list[dict]:
     acumulado: dict[tuple[str, str], dict] = {}
 
     for venta in ventas:
-        if venta.estado == 'anulada':
+        if venta.estado in NO_CUENTAN:
             continue
         for detalle in venta.detalles:
             llave = (detalle.tipo_item, detalle.nombre_item)
@@ -138,7 +143,7 @@ def _repartir(ventas: list[Venta], campo: str, etiquetas: dict[str, str]) -> lis
             'total': Decimal('0'),
         })
         fila['cantidad'] += 1
-        if venta.estado != 'anulada':
+        if venta.estado not in NO_CUENTAN:
             fila['total'] += Decimal(venta.total)
 
     for fila in acumulado.values():
@@ -156,10 +161,13 @@ def repartir_por_metodo_pago(ventas: list[Venta]) -> list[dict]:
 
 
 def _suma_ventas(sesion: Session, desde: date, hasta: date, cliente_id: int | None) -> tuple[int, Decimal]:
-    """Cuantas ventas y cuanto dinero en un rango, sin contar las anuladas."""
+    """Cuantas ventas y cuanto dinero en un rango.
+
+    No cuentan ni las anuladas ni los pedidos sin confirmar.
+    """
     consulta = (
         select(func.count(Venta.id_venta), func.coalesce(func.sum(Venta.total), 0))
-        .where(Venta.estado != 'anulada')
+        .where(Venta.estado.notin_(NO_CUENTAN))
         .where(func.date(Venta.fecha_venta) >= desde)
         .where(func.date(Venta.fecha_venta) <= hasta)
     )
@@ -188,7 +196,7 @@ def indicadores(
     es_cliente = rol == 'Cliente'
     cliente_id = usuario.id_usuario if es_cliente else None
 
-    validas = [v for v in ventas if v.estado != 'anulada']
+    validas = [v for v in ventas if v.estado not in NO_CUENTAN]
     total_ventas = redondear(sum((Decimal(v.total) for v in validas), Decimal('0')))
 
     consulta_facturas = select(

@@ -24,11 +24,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base_datos import Base
 
-EstadoVentaSQL = Enum('pendiente', 'pagada', 'anulada', name='estado_venta_enum')
+# 'solicitada' es el pedido que el cliente envio por WhatsApp y que todavia
+# nadie ha confirmado. No descuenta inventario ni cuenta en los informes: solo
+# cuando alguien del personal lo confirma pasa a ser una venta de verdad.
+EstadoVentaSQL = Enum('solicitada', 'pendiente', 'pagada', 'anulada', name='estado_venta_enum')
 MetodoPagoSQL = Enum('efectivo', 'tarjeta', 'transferencia', 'credito', name='metodo_pago_enum')
 TipoItemSQL = Enum('producto', 'servicio', name='tipo_item_enum')
 
-ESTADOS_VENTA = ('pendiente', 'pagada', 'anulada')
+ESTADOS_VENTA = ('solicitada', 'pendiente', 'pagada', 'anulada')
 METODOS_PAGO = ('efectivo', 'tarjeta', 'transferencia', 'credito')
 
 
