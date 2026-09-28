@@ -5,11 +5,11 @@ GET /api/ventas recibe unicamente sus propias compras: el filtro no se aplica
 en el Frontend, se aplica aqui.
 """
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Query, status
+from fastapi import APIRouter, Path, Query, Request, status
 
 from app.crud import facturas as crud_facturas
 from app.crud import usuarios as crud_usuarios
@@ -20,13 +20,20 @@ from app.dependencias import (
     UsuarioAutenticado,
     alcance_de_cliente,
 )
-from app.errores import RecursoNoEncontrado, SinPermisos
+from app.core import limitador
+from app.errores import (
+    DemasiadasSolicitudes,
+    RecursoNoEncontrado,
+    SinPermisos,
+)
 from app.models import Usuario, Venta
 from app.schemas.comunes import DetalleDeError
 from app.schemas.venta import (
     RespuestaListaVentas,
+    RespuestaSolicitud,
     RespuestaVenta,
     RespuestaVentaCreada,
+    SolicitudCrear,
     VentaCrear,
     VentaEstadoActualizar,
 )
@@ -42,6 +49,25 @@ router = APIRouter(
 )
 
 IdVenta = Annotated[int, Path(ge=1, description='Identificador de la venta.')]
+
+# Topes del pedido publico. No protegen un secreto, solo evitan que alguien
+# llene la tabla de ventas pulsando el boton en bucle.
+_ultimo_barrido: datetime | None = None
+BARRIDO_CADA = timedelta(hours=1)
+
+
+def _barrer_solicitudes(sesion) -> None:
+    """Descarta los pedidos vencidos, como mucho una vez por hora."""
+    global _ultimo_barrido
+    ahora = datetime.now()
+    if _ultimo_barrido is not None and ahora - _ultimo_barrido < BARRIDO_CADA:
+        return
+    _ultimo_barrido = ahora
+    crud_ventas.descartar_solicitudes_vencidas(sesion)
+
+
+MAXIMO_PEDIDOS = 5
+VENTANA_PEDIDOS = 600      # diez minutos
 
 
 def buscar_o_fallar(sesion: Sesion, id_venta: int, usuario: Usuario) -> Venta:
@@ -111,6 +137,46 @@ def registrar_venta(datos: VentaCrear, sesion: Sesion, gestor: AdministradorOEmp
     }
 
 
+@router.post(
+    '/solicitud',
+    response_model=RespuestaSolicitud,
+    status_code=status.HTTP_201_CREATED,
+    summary='Registrar un pedido enviado por WhatsApp',
+    description=(
+        'Deja constancia en el panel del pedido que el cliente esta a punto de '
+        'enviar por WhatsApp. Queda en estado "solicitada": no descuenta '
+        'inventario ni cuenta en los informes hasta que alguien del personal lo '
+        'confirma como venta. Los precios se toman del catalogo.'
+    ),
+    responses={429: {'model': DetalleDeError, 'description': 'Demasiados pedidos seguidos'}},
+)
+def registrar_solicitud(datos: SolicitudCrear, peticion: Request,
+                        sesion: Sesion, usuario: UsuarioAutenticado):
+    """El pedido queda siempre a nombre de quien lo envia."""
+    origen = peticion.client.host if peticion.client else 'desconocido'
+    if not limitador.permitir(f'pedido:{origen}', MAXIMO_PEDIDOS, VENTANA_PEDIDOS):
+        raise DemasiadasSolicitudes(
+            'Has enviado varios pedidos seguidos. Espera unos minutos o '
+            'escríbenos directamente por WhatsApp.',
+        )
+
+    venta = crud_ventas.crear(
+        sesion,
+        {'items': [i.model_dump() for i in datos.items], 'observaciones': datos.observaciones},
+        cliente=usuario,
+        vendedor=None,
+        solicitud=True,
+    )
+
+    return {
+        'ok': True,
+        'message': f'Pedido {venta.numero_venta} registrado. Te escribimos para confirmarlo.',
+        'id_venta': venta.id_venta,
+        'numero_venta': venta.numero_venta,
+        'total': venta.total,
+    }
+
+
 @router.get(
     '',
     response_model=RespuestaListaVentas,
@@ -128,7 +194,7 @@ def historial_de_ventas(
     cliente_id: Annotated[int | None, Query(ge=1)] = None,
     producto_id: Annotated[int | None, Query(ge=1)] = None,
     servicio_id: Annotated[int | None, Query(ge=1)] = None,
-    estado: Annotated[str | None, Query(pattern='^(pendiente|pagada|anulada)$')] = None,
+    estado: Annotated[str | None, Query(pattern='^(solicitada|pendiente|pagada|anulada)$')] = None,
     metodo_pago: Annotated[
         str | None, Query(pattern='^(efectivo|tarjeta|transferencia|credito)$'),
     ] = None,
@@ -137,6 +203,12 @@ def historial_de_ventas(
     busqueda: Annotated[str | None, Query(max_length=100, description='N.º de venta, nombre, correo o documento.')] = None,
     limite: Annotated[int, Query(ge=1, le=1000)] = 200,
 ):
+    # Aprovechando que el panel se abre a menudo, se barren los pedidos que
+    # nadie confirmo. Va aqui y no en una tarea programada para no depender de
+    # un planificador; el propio barrido se limita a una vez por hora.
+    if alcance_de_cliente(usuario) is None:
+        _barrer_solicitudes(sesion)
+
     propio = alcance_de_cliente(usuario)
     ventas = crud_ventas.listar(
         sesion,

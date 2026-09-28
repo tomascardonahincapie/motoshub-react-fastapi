@@ -230,7 +230,7 @@ CREATE TABLE IF NOT EXISTS ventas (
   descuento DECIMAL(12,2) NOT NULL DEFAULT 0,
   impuestos DECIMAL(12,2) NOT NULL DEFAULT 0,
   total DECIMAL(12,2) NOT NULL DEFAULT 0,
-  estado ENUM('pendiente','pagada','anulada') NOT NULL DEFAULT 'pendiente',
+  estado ENUM('solicitada','pendiente','pagada','anulada') NOT NULL DEFAULT 'pendiente',
   metodo_pago ENUM('efectivo','tarjeta','transferencia','credito') NOT NULL DEFAULT 'efectivo',
   observaciones VARCHAR(255) NULL,
   fecha_venta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

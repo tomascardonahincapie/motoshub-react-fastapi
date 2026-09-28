@@ -133,6 +133,10 @@ export const api = {
 
   // --- Ventas -------------------------------------------------------------
   crearVenta: (payload, token) => request('/ventas', { method: 'POST', body: payload, token }),
+  // Deja constancia del pedido antes de abrir WhatsApp. No es una venta
+  // todavia: queda 'solicitada' hasta que alguien del personal la confirme.
+  crearSolicitud: (payload, token) =>
+    request('/ventas/solicitud', { method: 'POST', body: payload, token }),
   getVentas: (filtros, token) => request(`/ventas${consulta(filtros)}`, { token }),
   getVenta: (id, token) => request(`/ventas/${id}`, { token }),
   cambiarEstadoVenta: (id, estado, token) =>

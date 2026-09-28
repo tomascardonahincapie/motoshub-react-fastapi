@@ -1,6 +1,7 @@
 // Etiquetas de estado compartidas por las tablas de ventas, facturas y PQR.
 
 const VENTA = {
+  solicitada: 'etiqueta-info',
   pagada: 'etiqueta-ok',
   pendiente: 'etiqueta-marca',
   anulada: 'etiqueta-peligro',

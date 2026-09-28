@@ -8,6 +8,7 @@ import { formatearFecha, formatearPrecio } from '../../config';
 
 const ESTADOS = [
   { valor: '', etiqueta: 'Todos los estados' },
+  { valor: 'solicitada', etiqueta: 'Pedidos sin confirmar' },
   { valor: 'pagada', etiqueta: 'Pagadas' },
   { valor: 'pendiente', etiqueta: 'Pendientes' },
   { valor: 'anulada', etiqueta: 'Anuladas' },
@@ -194,9 +195,9 @@ export default function TablaVentas({
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  const anular = async (venta) => {
+  const cambiarEstado = async (venta, estado) => {
     try {
-      await api.cambiarEstadoVenta(venta.id_venta, 'anulada', token);
+      await api.cambiarEstadoVenta(venta.id_venta, estado, token);
       setDetalle(null);
       cargar();
       alRegistrar?.();
@@ -204,6 +205,8 @@ export default function TablaVentas({
       setError(err.message);
     }
   };
+
+  const anular = (venta) => cambiarEstado(venta, 'anulada');
 
   const cambiar = (campo) => (evento) =>
     setFiltros((previos) => ({ ...previos, [campo]: evento.target.value }));
@@ -347,11 +350,42 @@ export default function TablaVentas({
       <Modal
         abierto={!!detalle}
         onCerrar={() => setDetalle(null)}
-        titulo={detalle ? `Venta ${detalle.numero_venta}` : ''}
+        titulo={detalle
+          ? `${detalle.estado === 'solicitada' ? 'Pedido' : 'Venta'} ${detalle.numero_venta}`
+          : ''}
         descripcion={detalle ? formatearFecha(detalle.fecha_venta) : ''}
       >
         <DetalleVenta venta={detalle} token={token} alFallar={setError} />
-        {puedeGestionar && detalle?.estado !== 'anulada' && (
+
+        {/* Un pedido todavia no descontó inventario: se confirma o se descarta.
+            Una venta ya registrada solo se puede anular. */}
+        {puedeGestionar && detalle?.estado === 'solicitada' && (
+          <>
+            <p className="mt-4 rounded-xl border border-info-400/25 bg-info-400/8 p-3 text-xs leading-relaxed text-mist-400">
+              Pedido enviado por WhatsApp y aún sin confirmar. No ha descontado
+              inventario ni cuenta en los informes. Al confirmarlo se descuentan
+              las unidades y pasa a ser una venta.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => cambiarEstado(detalle, 'pagada')}
+                className="btn btn-primario flex-1"
+              >
+                Confirmar como venta
+              </button>
+              <button
+                type="button"
+                onClick={() => cambiarEstado(detalle, 'anulada')}
+                className="btn btn-fantasma flex-1"
+              >
+                Descartar el pedido
+              </button>
+            </div>
+          </>
+        )}
+
+        {puedeGestionar && detalle && !['anulada', 'solicitada'].includes(detalle.estado) && (
           <button type="button" onClick={() => anular(detalle)} className="btn btn-peligro mt-4 w-full">
             Anular esta venta y devolver el inventario
           </button>

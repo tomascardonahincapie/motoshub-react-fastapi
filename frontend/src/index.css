@@ -351,6 +351,13 @@
     color: var(--color-mist-400);
   }
 
+  /* Pedido enviado por WhatsApp y todavia sin confirmar. */
+  .etiqueta-info {
+    background-color: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.32);
+    color: var(--color-info-400);
+  }
+
   /* --- Campos de formulario -------------------------------------------- */
 
   .campo {

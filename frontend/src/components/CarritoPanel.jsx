@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ImagenSegura from './ImagenSegura';
 import IconoWhatsApp from './IconoWhatsApp';
+import Aviso from './Aviso';
+import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
+import { api } from '../utils/api';
 import { IVA_PORCENTAJE, enlacePedido, formatearPrecio } from '../config';
 
 function Contador({ item, clave, cambiarCantidad }) {
@@ -44,9 +48,31 @@ function Contador({ item, clave, cambiarCantidad }) {
  * Administrador y Empleado.
  */
 export default function CarritoPanel() {
-  const { items, abierto, cerrar, totales, quitar, cambiarCantidad, vaciar, claveDe } = useCarrito();
+  const { items, abierto, cerrar, totales, quitar, cambiarCantidad, vaciar, comoPeticion, claveDe } = useCarrito();
+  const { token, isAuthenticated } = useAuth();
+
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
 
   if (!abierto) return null;
+
+  // El pedido queda registrado en el panel antes de abrir WhatsApp, para que
+  // el personal sepa que se pidio aunque la conversacion se pierda. Se abre la
+  // pestaña de todos modos: si el registro falla, el cliente no se queda sin
+  // poder escribir.
+  const enviarPedido = async () => {
+    setError('');
+    setEnviando(true);
+    try {
+      await api.crearSolicitud({ items: comoPeticion() }, token);
+    } catch (err) {
+      setError(err.message || 'No pudimos registrar el pedido, pero puedes escribirnos igual.');
+    } finally {
+      setEnviando(false);
+      window.open(enlacePedido(items, totales), '_blank', 'noopener,noreferrer');
+      cerrar();
+    }
+  };
 
   return (
     <div
@@ -141,21 +167,36 @@ export default function CarritoPanel() {
                 </div>
               </dl>
 
-              <a
-                href={enlacePedido(items, totales)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={cerrar}
-                className="btn btn-whatsapp flex w-full items-center justify-center gap-2"
-              >
-                <IconoWhatsApp className="h-4 w-4" />
-                Enviar pedido por WhatsApp
-              </a>
+              <Aviso tipo="error" onCerrar={() => setError('')}>{error}</Aviso>
 
-              <p className="text-center text-[0.7rem] leading-relaxed text-mist-600">
-                No se cobra nada aquí. Te escribimos para confirmar disponibilidad,
-                la forma de pago y la entrega.
-              </p>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={enviarPedido}
+                    disabled={enviando}
+                    className="btn btn-whatsapp flex w-full items-center justify-center gap-2"
+                  >
+                    <IconoWhatsApp className="h-4 w-4" />
+                    {enviando ? 'Registrando el pedido...' : 'Enviar pedido por WhatsApp'}
+                  </button>
+
+                  <p className="text-center text-[0.7rem] leading-relaxed text-mist-600">
+                    No se cobra nada aquí. Tu pedido queda registrado y te escribimos
+                    para confirmar disponibilidad, la forma de pago y la entrega.
+                  </p>
+                </>
+              ) : (
+                <div className="rounded-xl border border-brand-500/30 bg-brand-500/8 p-4 text-center">
+                  <p className="text-xs leading-relaxed text-mist-400">
+                    Entra con tu cuenta para enviar el pedido. Así queda registrado
+                    a tu nombre y puedes seguirlo desde tu panel.
+                  </p>
+                  <Link to="/login" onClick={cerrar} className="btn btn-primario mt-3 w-full !text-[0.7rem]">
+                    Iniciar sesión
+                  </Link>
+                </div>
+              )}
 
               <button
                 type="button"

@@ -217,3 +217,111 @@ def test_una_venta_anulada_no_suma_al_total_del_historial(cliente_http, token_ad
 
     assert resumen['cantidad'] == 1
     assert float(resumen['total']) == 0
+
+
+# ---------------------------------------------------------------------------
+# Pedidos enviados por WhatsApp
+# ---------------------------------------------------------------------------
+def pedir(cliente_http, token, **extra):
+    cuerpo = {'items': [MOTO], **extra}
+    return cliente_http.post('/api/ventas/solicitud', json=cuerpo, headers=cabecera(token))
+
+
+def test_el_cliente_registra_su_pedido_de_whatsapp(cliente_http, token_cliente):
+    respuesta = pedir(cliente_http, token_cliente)
+
+    assert respuesta.status_code == 201, respuesta.text
+    assert respuesta.json()['numero_venta'].startswith('V-')
+
+
+def test_el_pedido_no_descuenta_inventario(cliente_http, token_cliente):
+    """Si lo descontara, bastaria con pedir para dejar el catalogo en cero."""
+    antes = cliente_http.get('/api/productos/1').json()['producto']['stock']
+
+    pedir(cliente_http, token_cliente, items=[{**MOTO, 'cantidad': 3}])
+
+    despues = cliente_http.get('/api/productos/1').json()['producto']['stock']
+    assert despues == antes
+
+
+def test_el_pedido_no_suma_en_los_indicadores(cliente_http, token_cliente, token_admin):
+    """Contar pedidos sin confirmar como ventas haria mentir a las cifras."""
+    pedir(cliente_http, token_cliente)
+
+    datos = cliente_http.get('/api/estadisticas/resumen', headers=cabecera(token_admin)).json()
+
+    assert datos['indicadores']['ventas_cantidad'] == 0
+    assert float(datos['indicadores']['ventas_total']) == 0
+
+
+def test_confirmar_el_pedido_descuenta_el_inventario(cliente_http, token_cliente, token_admin):
+    antes = cliente_http.get('/api/productos/1').json()['producto']['stock']
+    id_venta = pedir(cliente_http, token_cliente, items=[{**MOTO, 'cantidad': 2}]).json()['id_venta']
+
+    respuesta = cliente_http.patch(
+        f'/api/ventas/{id_venta}/estado', json={'estado': 'pagada'}, headers=cabecera(token_admin),
+    )
+
+    assert respuesta.status_code == 200, respuesta.text
+    assert cliente_http.get('/api/productos/1').json()['producto']['stock'] == antes - 2
+
+
+def test_confirmar_un_pedido_sin_unidades_disponibles_falla(cliente_http, token_cliente, token_admin):
+    """Entre el pedido y la confirmacion pueden haberse vendido en el mostrador."""
+    id_venta = pedir(cliente_http, token_cliente, items=[{**MOTO, 'cantidad': 2}]).json()['id_venta']
+    # Alguien se lleva todas las unidades por el camino.
+    registrar(cliente_http, token_admin, items=[{**MOTO, 'cantidad': 20}])
+
+    respuesta = cliente_http.patch(
+        f'/api/ventas/{id_venta}/estado', json={'estado': 'pagada'}, headers=cabecera(token_admin),
+    )
+
+    assert respuesta.status_code == 409, respuesta.text
+
+
+def test_descartar_un_pedido_no_devuelve_unidades(cliente_http, token_cliente, token_admin):
+    """Un pedido nunca descuenta, asi que descartarlo no puede devolver nada."""
+    antes = cliente_http.get('/api/productos/1').json()['producto']['stock']
+    id_venta = pedir(cliente_http, token_cliente).json()['id_venta']
+
+    cliente_http.patch(
+        f'/api/ventas/{id_venta}/estado', json={'estado': 'anulada'}, headers=cabecera(token_admin),
+    )
+
+    assert cliente_http.get('/api/productos/1').json()['producto']['stock'] == antes
+
+
+def test_sin_cuenta_no_se_puede_pedir(cliente_http):
+    respuesta = cliente_http.post('/api/ventas/solicitud', json={'items': [MOTO]})
+
+    assert respuesta.status_code == 401
+
+
+def test_los_pedidos_que_nadie_confirma_se_descartan_solos(
+    cliente_http, token_cliente, sesion_de_prueba,
+):
+    """Abrir WhatsApp no garantiza que el mensaje se envie.
+
+    Sin esta limpieza la lista se llenaria de pedidos que nunca existieron.
+    """
+    from datetime import datetime, timedelta
+
+    from app.crud import ventas as crud_ventas
+    from app.models import Venta
+
+    id_venta = pedir(cliente_http, token_cliente).json()['id_venta']
+
+    venta = sesion_de_prueba.get(Venta, id_venta)
+    venta.fecha_venta = datetime.now() - timedelta(days=8)
+    sesion_de_prueba.commit()
+
+    assert crud_ventas.descartar_solicitudes_vencidas(sesion_de_prueba) == 1
+    assert sesion_de_prueba.get(Venta, id_venta).estado == 'anulada'
+
+
+def test_un_pedido_reciente_no_se_descarta(cliente_http, token_cliente, sesion_de_prueba):
+    from app.crud import ventas as crud_ventas
+
+    pedir(cliente_http, token_cliente)
+
+    assert crud_ventas.descartar_solicitudes_vencidas(sesion_de_prueba) == 0
