@@ -55,7 +55,10 @@ class Factura(Base):
     observaciones: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     fecha_emision: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), index=True,
+        # La fecha la pone Python para que coincida con el reloj con que se
+        # calculan los rangos de los informes. Ver la nota en venta.py.
+        DateTime, nullable=False, default=datetime.now,
+        server_default=func.now(), index=True,
     )
     fecha_actualizacion: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now(), onupdate=func.now(),

@@ -105,10 +105,12 @@ def test_las_pqr_se_filtran_por_tipo_y_por_estado(cliente_http, token_cliente, t
 # ---------------------------------------------------------------------------
 # Dashboards: los tres roles llaman a la misma ruta y ven cosas distintas
 # ---------------------------------------------------------------------------
-def vender(cliente_http, token):
-    return cliente_http.post(
-        '/api/ventas', json={'items': [MOTO]}, headers=cabecera(token),
-    ).json()
+def vender(cliente_http, token, cliente_id=None):
+    """Registra una venta. La crea siempre quien atiende, no el cliente."""
+    cuerpo = {'items': [MOTO]}
+    if cliente_id is not None:
+        cuerpo['cliente_id'] = cliente_id
+    return cliente_http.post('/api/ventas', json=cuerpo, headers=cabecera(token)).json()
 
 
 def test_el_administrador_ve_los_indicadores_de_todo_el_sistema(cliente_http, token_admin):
@@ -132,8 +134,10 @@ def test_el_empleado_ve_la_operacion_pero_no_las_cuentas_de_usuarios(cliente_htt
     assert indicadores['clientes'] is None
 
 
-def test_el_cliente_solo_ve_sus_propias_cifras(cliente_http, token_cliente, token_admin):
-    vender(cliente_http, token_cliente)
+def test_el_cliente_solo_ve_sus_propias_cifras(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    vender(cliente_http, token_admin, cliente_id=id_cliente)
     vender(cliente_http, token_admin)
 
     datos = cliente_http.get('/api/estadisticas/resumen', headers=cabecera(token_cliente)).json()
@@ -167,8 +171,8 @@ def test_la_serie_agrupada_por_mes_junta_los_dias(cliente_http, token_admin):
     assert [punto['etiqueta'] for punto in datos['serie']] == ['ene 2026', 'feb 2026', 'mar 2026']
 
 
-def test_la_venta_aparece_en_la_serie_y_en_el_ranking(cliente_http, token_cliente, token_admin):
-    vender(cliente_http, token_cliente)
+def test_la_venta_aparece_en_la_serie_y_en_el_ranking(cliente_http, token_admin):
+    vender(cliente_http, token_admin)
 
     datos = cliente_http.get('/api/estadisticas/ventas', headers=cabecera(token_admin)).json()
 

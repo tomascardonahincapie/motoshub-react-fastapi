@@ -60,8 +60,13 @@ class Venta(Base):
     )
     observaciones: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    # La fecha la pone Python, no la base. Con server_default=func.now() la
+    # marca la ponia el motor: SQLite responde en UTC y MySQL en la hora de su
+    # servidor, mientras que los rangos del Dashboard se calculan con
+    # date.today() del proceso. Cuando los dos relojes no coinciden, una venta
+    # de la tarde queda fechada manana y desaparece del informe de hoy.
     fecha_venta: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), index=True,
+        DateTime, nullable=False, default=datetime.now, server_default=func.now(), index=True,
     )
     fecha_actualizacion: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now(), onupdate=func.now(),

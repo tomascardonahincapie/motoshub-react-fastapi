@@ -53,6 +53,22 @@ def sembrar(sesion):
 
 
 @pytest.fixture(autouse=True)
+def ia_apagada(monkeypatch):
+    """Las pruebas no dependen del .env de quien las corra.
+
+    Varias comprueban que sin clave el chatbot contesta con su motor de
+    reglas. Si el .env de la maquina tiene una IA_API_KEY de verdad, esas
+    pruebas fallaban sin que nada estuviera roto. Quien necesite la IA la
+    enciende con monkeypatch en su propia prueba.
+    """
+    from app.core.configuracion import configuracion
+
+    monkeypatch.setattr(configuracion, 'ia_proveedor', 'ninguno')
+    monkeypatch.setattr(configuracion, 'ia_api_key', '')
+    monkeypatch.setattr(configuracion, 'ia_modelo', '')
+
+
+@pytest.fixture(autouse=True)
 def limitador_limpio():
     """El limitador cuenta en memoria del proceso.
 
@@ -118,3 +134,14 @@ def token_empleado(cliente_http):
 @pytest.fixture()
 def token_cliente(cliente_http):
     return iniciar_sesion(cliente_http, CLIENTE)
+
+
+@pytest.fixture()
+def id_cliente(cliente_http):
+    """Id del cliente de prueba.
+
+    Hace falta porque las ventas ya no las registra el cliente: las registra
+    quien atiende, indicando a nombre de quien va.
+    """
+    respuesta = cliente_http.post('/api/auth/login', json=CLIENTE)
+    return respuesta.json()['usuario']['id_usuario']

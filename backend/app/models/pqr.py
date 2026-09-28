@@ -44,7 +44,10 @@ class Pqr(Base):
     )
 
     fecha_registro: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), index=True,
+        # La fecha la pone Python para que coincida con el reloj con que se
+        # calculan los rangos de los informes. Ver la nota en venta.py.
+        DateTime, nullable=False, default=datetime.now,
+        server_default=func.now(), index=True,
     )
     fecha_respuesta: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     fecha_actualizacion: Mapped[datetime] = mapped_column(

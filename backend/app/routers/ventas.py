@@ -79,15 +79,20 @@ def _resolver_cliente(sesion: Sesion, usuario: Usuario, cliente_id: int | None) 
     status_code=status.HTTP_201_CREATED,
     summary='Registrar una venta',
     description=(
-        'Registra la venta con los productos y servicios indicados. Los precios '
-        'se toman del catálogo, nunca de la petición. Descuenta el stock y, si '
-        'se pide, emite la factura en el mismo momento.'
+        'Reservado a Administrador y Empleado. El sitio publico ya no vende: el '
+        'cliente arma su pedido y lo envia por WhatsApp, y la venta se registra '
+        'aqui una vez acordada. Los precios se toman del catálogo, nunca de la '
+        'petición. Descuenta el stock y, si se pide, emite la factura en el '
+        'mismo momento.'
     ),
+    responses={403: {'model': DetalleDeError, 'description': 'Solo Administrador y Empleado'}},
 )
-def registrar_venta(datos: VentaCrear, sesion: Sesion, usuario: UsuarioAutenticado):
-    cliente = _resolver_cliente(sesion, usuario, datos.cliente_id)
-    # Cuando el propio cliente compra no hay vendedor que registrar.
-    vendedor = None if cliente.id_usuario == usuario.id_usuario else usuario
+def registrar_venta(datos: VentaCrear, sesion: Sesion, gestor: AdministradorOEmpleado):
+    # Ya no hay compra en linea: la venta la registra siempre quien atiende,
+    # despues de cerrar el trato por WhatsApp. Por eso el vendedor es quien
+    # hace la peticion y el cliente viene indicado en el cuerpo.
+    cliente = _resolver_cliente(sesion, gestor, datos.cliente_id)
+    vendedor = None if cliente.id_usuario == gestor.id_usuario else gestor
 
     venta = crud_ventas.crear(sesion, datos.model_dump(), cliente, vendedor)
 

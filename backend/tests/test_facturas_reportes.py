@@ -13,6 +13,7 @@ TIPO_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
 def vender(cliente_http, token, **extra):
+    """Registra una venta ya acordada. Solo Administrador y Empleado pueden."""
     cuerpo = {'items': [MOTO], 'metodo_pago': 'efectivo', **extra}
     return cliente_http.post('/api/ventas', json=cuerpo, headers=cabecera(token)).json()
 
@@ -20,8 +21,10 @@ def vender(cliente_http, token, **extra):
 # ---------------------------------------------------------------------------
 # Facturas
 # ---------------------------------------------------------------------------
-def test_la_factura_copia_los_datos_del_cliente(cliente_http, token_cliente):
-    id_factura = vender(cliente_http, token_cliente)['id_factura']
+def test_la_factura_copia_los_datos_del_cliente(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    id_factura = vender(cliente_http, token_admin, cliente_id=id_cliente)['id_factura']
 
     factura = cliente_http.get(
         f'/api/facturas/{id_factura}', headers=cabecera(token_cliente),
@@ -33,8 +36,10 @@ def test_la_factura_copia_los_datos_del_cliente(cliente_http, token_cliente):
     assert len(factura['detalles']) == 1
 
 
-def test_una_venta_no_se_puede_facturar_dos_veces(cliente_http, token_cliente, token_admin):
-    id_venta = vender(cliente_http, token_cliente)['id_venta']
+def test_una_venta_no_se_puede_facturar_dos_veces(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    id_venta = vender(cliente_http, token_admin, cliente_id=id_cliente)['id_venta']
 
     respuesta = cliente_http.post(
         '/api/facturas', json={'venta_id': id_venta}, headers=cabecera(token_admin),
@@ -44,8 +49,10 @@ def test_una_venta_no_se_puede_facturar_dos_veces(cliente_http, token_cliente, t
     assert 'ya tiene la factura' in respuesta.json()['message']
 
 
-def test_se_puede_vender_sin_emitir_factura_y_emitirla_despues(cliente_http, token_cliente, token_admin):
-    venta = vender(cliente_http, token_cliente, generar_factura=False)
+def test_se_puede_vender_sin_emitir_factura_y_emitirla_despues(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    venta = vender(cliente_http, token_admin, cliente_id=id_cliente, generar_factura=False)
     assert venta['numero_factura'] is None
 
     respuesta = cliente_http.post(
@@ -56,8 +63,10 @@ def test_se_puede_vender_sin_emitir_factura_y_emitirla_despues(cliente_http, tok
     assert respuesta.json()['numero_factura'].startswith('FV-')
 
 
-def test_la_factura_se_descarga_en_pdf(cliente_http, token_cliente):
-    id_factura = vender(cliente_http, token_cliente)['id_factura']
+def test_la_factura_se_descarga_en_pdf(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    id_factura = vender(cliente_http, token_admin, cliente_id=id_cliente)['id_factura']
 
     respuesta = cliente_http.get(
         f'/api/facturas/{id_factura}/pdf', headers=cabecera(token_cliente),
@@ -77,9 +86,11 @@ def test_el_cliente_no_puede_descargar_la_factura_de_otro(cliente_http, token_cl
     assert respuesta.status_code == 403
 
 
-def test_anular_la_factura_anula_la_venta_y_devuelve_el_stock(cliente_http, token_cliente, token_admin):
+def test_anular_la_factura_anula_la_venta_y_devuelve_el_stock(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
     antes = cliente_http.get('/api/productos/1').json()['producto']['stock']
-    venta = vender(cliente_http, token_cliente)
+    venta = vender(cliente_http, token_admin, cliente_id=id_cliente)
 
     cliente_http.patch(
         f"/api/facturas/{venta['id_factura']}/estado",
@@ -93,8 +104,10 @@ def test_anular_la_factura_anula_la_venta_y_devuelve_el_stock(cliente_http, toke
     assert cliente_http.get('/api/productos/1').json()['producto']['stock'] == antes
 
 
-def test_la_busqueda_de_facturas_encuentra_por_numero(cliente_http, token_cliente, token_admin):
-    numero = vender(cliente_http, token_cliente)['numero_factura']
+def test_la_busqueda_de_facturas_encuentra_por_numero(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    numero = vender(cliente_http, token_admin, cliente_id=id_cliente)['numero_factura']
 
     encontradas = cliente_http.get(
         '/api/facturas', params={'busqueda': numero}, headers=cabecera(token_admin),
@@ -107,9 +120,11 @@ def test_la_busqueda_de_facturas_encuentra_por_numero(cliente_http, token_client
 # ---------------------------------------------------------------------------
 # Reporte diario de ventas
 # ---------------------------------------------------------------------------
-def test_el_reporte_del_dia_trae_las_ventas_y_sus_totales(cliente_http, token_cliente, token_admin):
-    vender(cliente_http, token_cliente)
-    vender(cliente_http, token_cliente)
+def test_el_reporte_del_dia_trae_las_ventas_y_sus_totales(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    vender(cliente_http, token_admin, cliente_id=id_cliente)
+    vender(cliente_http, token_admin, cliente_id=id_cliente)
 
     reporte = cliente_http.get('/api/reportes/ventas-diarias', headers=cabecera(token_admin)).json()
 
@@ -130,8 +145,10 @@ def test_el_reporte_de_un_dia_sin_ventas_sale_vacio_pero_valido(cliente_http, to
     assert float(reporte['resumen']['total']) == 0
 
 
-def test_el_reporte_se_exporta_a_pdf(cliente_http, token_cliente, token_admin):
-    vender(cliente_http, token_cliente)
+def test_el_reporte_se_exporta_a_pdf(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    vender(cliente_http, token_admin, cliente_id=id_cliente)
 
     respuesta = cliente_http.get('/api/reportes/ventas-diarias/pdf', headers=cabecera(token_admin))
 
@@ -142,8 +159,10 @@ def test_el_reporte_se_exporta_a_pdf(cliente_http, token_cliente, token_admin):
     assert len(respuesta.content) > 2000
 
 
-def test_el_reporte_se_exporta_a_excel(cliente_http, token_cliente, token_admin):
-    vender(cliente_http, token_cliente)
+def test_el_reporte_se_exporta_a_excel(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    vender(cliente_http, token_admin, cliente_id=id_cliente)
 
     respuesta = cliente_http.get('/api/reportes/ventas-diarias/excel', headers=cabecera(token_admin))
 
@@ -153,12 +172,14 @@ def test_el_reporte_se_exporta_a_excel(cliente_http, token_cliente, token_admin)
     assert '.xlsx' in respuesta.headers['content-disposition']
 
 
-def test_el_excel_trae_las_tres_hojas_con_los_datos(cliente_http, token_cliente, token_admin):
+def test_el_excel_trae_las_tres_hojas_con_los_datos(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
     from io import BytesIO
 
     from openpyxl import load_workbook
 
-    vender(cliente_http, token_cliente)
+    vender(cliente_http, token_admin, cliente_id=id_cliente)
     respuesta = cliente_http.get('/api/reportes/ventas-diarias/excel', headers=cabecera(token_admin))
 
     libro = load_workbook(BytesIO(respuesta.content))
@@ -185,10 +206,12 @@ def test_el_empleado_si_puede_generar_el_reporte(cliente_http, token_empleado):
 # ---------------------------------------------------------------------------
 # La factura guarda su propio detalle
 # ---------------------------------------------------------------------------
-def test_la_factura_copia_las_lineas_al_emitirse(cliente_http, token_cliente, sesion_de_prueba):
+def test_la_factura_copia_las_lineas_al_emitirse(
+    cliente_http, token_cliente, sesion_de_prueba, token_admin, id_cliente,
+):
     from app.models import DetalleFactura
 
-    venta = vender(cliente_http, token_cliente)
+    venta = vender(cliente_http, token_admin, cliente_id=id_cliente)
 
     lineas = sesion_de_prueba.query(DetalleFactura).filter_by(
         factura_id=venta['id_factura'],
@@ -199,11 +222,13 @@ def test_la_factura_copia_las_lineas_al_emitirse(cliente_http, token_cliente, se
     assert float(lineas[0].subtotal) == 480000
 
 
-def test_corregir_la_venta_no_altera_la_factura_ya_emitida(cliente_http, token_cliente, sesion_de_prueba):
+def test_corregir_la_venta_no_altera_la_factura_ya_emitida(
+    cliente_http, token_cliente, sesion_de_prueba, token_admin, id_cliente,
+):
     """Una factura es un documento: dice lo que se cobro, pase lo que pase."""
     from app.models import DetalleVenta
 
-    venta = vender(cliente_http, token_cliente)
+    venta = vender(cliente_http, token_admin, cliente_id=id_cliente)
 
     # Se retoca el detalle de la venta como si alguien corrigiera un error.
     linea = sesion_de_prueba.query(DetalleVenta).filter_by(venta_id=venta['id_venta']).first()
@@ -219,10 +244,12 @@ def test_corregir_la_venta_no_altera_la_factura_ya_emitida(cliente_http, token_c
     assert float(factura['detalles'][0]['precio_unitario']) == 480000
 
 
-def test_el_pdf_de_la_factura_imprime_su_propio_detalle(cliente_http, token_cliente, sesion_de_prueba):
+def test_el_pdf_de_la_factura_imprime_su_propio_detalle(
+    cliente_http, token_cliente, sesion_de_prueba, token_admin, id_cliente,
+):
     from app.models import DetalleVenta
 
-    venta = vender(cliente_http, token_cliente)
+    venta = vender(cliente_http, token_admin, cliente_id=id_cliente)
     linea = sesion_de_prueba.query(DetalleVenta).filter_by(venta_id=venta['id_venta']).first()
     linea.nombre_item = 'Artículo cambiado despues'
     sesion_de_prueba.commit()

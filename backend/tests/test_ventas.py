@@ -18,8 +18,10 @@ def registrar(cliente_http, token, **extra):
 # ---------------------------------------------------------------------------
 # Registro de ventas
 # ---------------------------------------------------------------------------
-def test_el_cliente_registra_su_compra_y_recibe_numero_y_factura(cliente_http, token_cliente):
-    respuesta = registrar(cliente_http, token_cliente)
+def test_el_empleado_registra_la_venta_y_recibe_numero_y_factura(
+    cliente_http, token_empleado, id_cliente,
+):
+    respuesta = registrar(cliente_http, token_empleado, cliente_id=id_cliente)
 
     assert respuesta.status_code == 201, respuesta.text
     datos = respuesta.json()
@@ -29,69 +31,81 @@ def test_el_cliente_registra_su_compra_y_recibe_numero_y_factura(cliente_http, t
     assert float(datos['total']) == PRECIO_MOTO * 1.19
 
 
-def test_los_precios_salen_del_catalogo_y_no_de_la_peticion(cliente_http, token_cliente):
+def test_los_precios_salen_del_catalogo_y_no_de_la_peticion(cliente_http, token_empleado):
     """Enviar un precio en la peticion no debe abaratar la compra."""
     respuesta = cliente_http.post(
         '/api/ventas',
         json={'items': [{**MOTO, 'precio_unitario': 1000, 'subtotal': 1000}]},
-        headers=cabecera(token_cliente),
+        headers=cabecera(token_empleado),
     )
 
     assert respuesta.status_code == 201, respuesta.text
     assert float(respuesta.json()['total']) == PRECIO_MOTO * 1.19
 
 
-def test_la_venta_descuenta_el_stock(cliente_http, token_cliente):
+def test_la_venta_descuenta_el_stock(cliente_http, token_empleado):
     antes = cliente_http.get('/api/productos/1').json()['producto']['stock']
 
-    registrar(cliente_http, token_cliente, items=[{**MOTO, 'cantidad': 3}])
+    registrar(cliente_http, token_empleado, items=[{**MOTO, 'cantidad': 3}])
 
     despues = cliente_http.get('/api/productos/1').json()['producto']['stock']
     assert despues == antes - 3
 
 
-def test_rechaza_la_venta_cuando_no_alcanza_el_stock(cliente_http, token_cliente):
-    respuesta = registrar(cliente_http, token_cliente, items=[{**MOTO, 'cantidad': 999}])
+def test_rechaza_la_venta_cuando_no_alcanza_el_stock(cliente_http, token_empleado):
+    respuesta = registrar(cliente_http, token_empleado, items=[{**MOTO, 'cantidad': 999}])
 
     assert respuesta.status_code == 409
     assert 'stock' in respuesta.json()['message'].lower()
 
 
-def test_suma_varias_lineas_del_mismo_producto_antes_de_mirar_el_stock(cliente_http, token_cliente):
+def test_suma_varias_lineas_del_mismo_producto_antes_de_mirar_el_stock(cliente_http, token_empleado):
     """Veinte unidades en dos lineas de quince tampoco deben pasar."""
     respuesta = registrar(
-        cliente_http, token_cliente,
+        cliente_http, token_empleado,
         items=[{**MOTO, 'cantidad': 15}, {**MOTO, 'cantidad': 15}],
     )
 
     assert respuesta.status_code == 409
 
 
-def test_vende_productos_y_servicios_en_la_misma_operacion(cliente_http, token_cliente):
-    respuesta = registrar(cliente_http, token_cliente, items=[MOTO, ACEITE])
+def test_vende_productos_y_servicios_en_la_misma_operacion(cliente_http, token_empleado):
+    respuesta = registrar(cliente_http, token_empleado, items=[MOTO, ACEITE])
 
     assert respuesta.status_code == 201, respuesta.text
     esperado = (PRECIO_MOTO + PRECIO_ACEITE) * 1.19
     assert round(float(respuesta.json()['total'])) == round(esperado)
 
 
-def test_rechaza_un_articulo_que_no_existe(cliente_http, token_cliente):
-    respuesta = registrar(cliente_http, token_cliente, items=[{**MOTO, 'id_item': 9999}])
+def test_rechaza_un_articulo_que_no_existe(cliente_http, token_empleado):
+    respuesta = registrar(cliente_http, token_empleado, items=[{**MOTO, 'id_item': 9999}])
 
     assert respuesta.status_code == 404
 
 
-def test_exige_al_menos_un_articulo(cliente_http, token_cliente):
-    respuesta = cliente_http.post('/api/ventas', json={'items': []}, headers=cabecera(token_cliente))
+def test_exige_al_menos_un_articulo(cliente_http, token_empleado):
+    respuesta = cliente_http.post('/api/ventas', json={'items': []}, headers=cabecera(token_empleado))
 
     assert respuesta.status_code == 422
 
 
-def test_una_venta_a_credito_queda_pendiente_de_cobro(cliente_http, token_cliente):
-    registrar(cliente_http, token_cliente, metodo_pago='credito')
+def test_una_venta_a_credito_queda_pendiente_de_cobro(cliente_http, token_empleado):
+    registrar(cliente_http, token_empleado, metodo_pago='credito')
 
-    venta = cliente_http.get('/api/ventas', headers=cabecera(token_cliente)).json()['ventas'][0]
+    venta = cliente_http.get('/api/ventas', headers=cabecera(token_empleado)).json()['ventas'][0]
     assert venta['estado'] == 'pendiente'
+
+
+def test_el_cliente_no_puede_registrar_una_venta(cliente_http, token_cliente):
+    """El sitio publico ya no vende: el pedido se cierra por WhatsApp.
+
+    Quitar el boton de la pantalla no basta. Si el endpoint siguiera abierto,
+    cualquiera con una sesion de cliente podria crear ventas por su cuenta y
+    saltarse el acuerdo previo, que es justo lo que se quiere evitar.
+    """
+    respuesta = registrar(cliente_http, token_cliente)
+
+    assert respuesta.status_code == 403, respuesta.text
 
 
 def test_sin_token_no_se_puede_vender(cliente_http):
@@ -103,8 +117,10 @@ def test_sin_token_no_se_puede_vender(cliente_http):
 # ---------------------------------------------------------------------------
 # Historial y control de acceso
 # ---------------------------------------------------------------------------
-def test_el_cliente_solo_ve_sus_propias_compras(cliente_http, token_cliente, token_admin):
-    registrar(cliente_http, token_cliente)
+def test_el_cliente_solo_ve_sus_propias_compras(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    registrar(cliente_http, token_admin, cliente_id=id_cliente)
     # El administrador vende a su propio nombre: esa venta no es del cliente.
     registrar(cliente_http, token_admin)
 
@@ -149,9 +165,9 @@ def test_el_empleado_vende_a_nombre_de_un_cliente(cliente_http, token_empleado):
     assert venta['vendedor_nombre'] == 'Laura Gomez'
 
 
-def test_el_historial_filtra_por_estado_y_por_producto(cliente_http, token_cliente, token_admin):
-    registrar(cliente_http, token_cliente)
-    registrar(cliente_http, token_cliente, items=[ACEITE])
+def test_el_historial_filtra_por_estado_y_por_producto(cliente_http, token_admin):
+    registrar(cliente_http, token_admin)
+    registrar(cliente_http, token_admin, items=[ACEITE])
 
     por_producto = cliente_http.get(
         '/api/ventas', params={'producto_id': 1}, headers=cabecera(token_admin),
@@ -164,9 +180,9 @@ def test_el_historial_filtra_por_estado_y_por_producto(cliente_http, token_clien
     assert por_estado['resumen']['cantidad'] == 0
 
 
-def test_anular_la_venta_devuelve_las_unidades_al_inventario(cliente_http, token_cliente, token_admin):
+def test_anular_la_venta_devuelve_las_unidades_al_inventario(cliente_http, token_admin):
     antes = cliente_http.get('/api/productos/1').json()['producto']['stock']
-    id_venta = registrar(cliente_http, token_cliente, items=[{**MOTO, 'cantidad': 2}]).json()['id_venta']
+    id_venta = registrar(cliente_http, token_admin, items=[{**MOTO, 'cantidad': 2}]).json()['id_venta']
 
     respuesta = cliente_http.patch(
         f'/api/ventas/{id_venta}/estado',
@@ -178,8 +194,10 @@ def test_anular_la_venta_devuelve_las_unidades_al_inventario(cliente_http, token
     assert cliente_http.get('/api/productos/1').json()['producto']['stock'] == antes
 
 
-def test_el_cliente_no_puede_anular_su_propia_venta(cliente_http, token_cliente):
-    id_venta = registrar(cliente_http, token_cliente).json()['id_venta']
+def test_el_cliente_no_puede_anular_su_propia_venta(
+    cliente_http, token_cliente, token_admin, id_cliente,
+):
+    id_venta = registrar(cliente_http, token_admin, cliente_id=id_cliente).json()['id_venta']
 
     respuesta = cliente_http.patch(
         f'/api/ventas/{id_venta}/estado',
@@ -190,8 +208,8 @@ def test_el_cliente_no_puede_anular_su_propia_venta(cliente_http, token_cliente)
     assert respuesta.status_code == 403
 
 
-def test_una_venta_anulada_no_suma_al_total_del_historial(cliente_http, token_cliente, token_admin):
-    id_venta = registrar(cliente_http, token_cliente).json()['id_venta']
+def test_una_venta_anulada_no_suma_al_total_del_historial(cliente_http, token_admin):
+    id_venta = registrar(cliente_http, token_admin).json()['id_venta']
     cliente_http.patch(f'/api/ventas/{id_venta}/estado', json={'estado': 'anulada'},
                        headers=cabecera(token_admin))
 
